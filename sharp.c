@@ -24,12 +24,12 @@ void T1_HeartBeat()
     // improve: do not wait whole turn if something is empty or invalid
     string sTarget = GetLocalString( OBJECT_SELF, "TARGET" );
     if (sTarget == "")
-        T1_Speak("no starget")
+        T1_Speak("no starget");
         return;
 
     object oTarget = GetObjectByTag( sTarget );
     if (!GetIsObjectValid( oTarget ))
-        T1_Speak("objectinv_1")
+        T1_Speak("objectinv_1");
         return;
 
     // If there is a member of my own team close to the target and closer than me,
@@ -67,7 +67,7 @@ void T1_HeartBeat()
         oTarget = GetObjectByTag( sTarget );
         // immediately pick next target ??
         if (!GetIsObjectValid( oTarget ))
-            T1_Speak("objectinv_2")
+            T1_Speak("objectinv_2");
             return;
         fToTarget = GetDistanceToObject( oTarget );
     }
