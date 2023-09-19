@@ -1,6 +1,30 @@
 #include "NW_I0_GENERIC"
 #include "our_constants"
 
+string T2_GetNotSoRandomTarget()
+{
+    // The next line moves to the spawn location of the similar opponent
+    // ActionMoveToLocation( GetLocation( GetObjectByTag( "WP_" + OpponentColor( OBJECT_SELF ) + "_" + IntToString( GetLocalInt( OBJECT_SELF, "INDEX" ) ) ) ), TRUE );
+
+    int iTarget = Random( 10 );
+
+    if (iTarget < 4)
+        return WpDoubler();
+    else if (iTarget < 6)
+        return WpFurthestAltarLeft();
+    else if (iTarget < 8)
+        return WpFurthestAltarRight();
+    else
+        {
+        int iTarget = Random(2);
+        if (iTarget == 0)
+            return WpClosestAltarLeft();
+        else
+            return WpClosestAltarRight();
+        }
+    return "";
+}
+
 // Called every time that the AI needs to take a combat decision. The default is
 // a call to the NWN DetermineCombatRound.
 void T2_DetermineCombatRound( object oIntruder = OBJECT_INVALID, int nAI_Difficulty = 10 )
@@ -58,7 +82,7 @@ void T2_HeartBeat()
 
     if (bNewTarget)
     {
-        sTarget = GetRandomTarget();
+        sTarget = T2_GetNotSoRandomTarget();
         SetLocalString( OBJECT_SELF, "TARGET", sTarget );
         oTarget = GetObjectByTag( sTarget );
         if (!GetIsObjectValid( oTarget ))
@@ -78,7 +102,7 @@ void T2_HeartBeat()
 // Called when the NPC is spawned.
 void T2_Spawn()
 {
-    string sTarget = GetRandomTarget();
+    string sTarget = T2_GetNotSoRandomTarget();
     SetLocalString( OBJECT_SELF, "TARGET", sTarget );
     ActionMoveToLocation( GetLocation( GetObjectByTag( sTarget ) ), TRUE );
 }
