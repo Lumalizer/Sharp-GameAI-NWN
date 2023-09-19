@@ -8,29 +8,25 @@ void T2_DetermineCombatRound( object oIntruder = OBJECT_INVALID, int nAI_Difficu
     DetermineCombatRound( oIntruder, nAI_Difficulty );
 }
 
-void T2_Speak( string message )
-{
-    SpeakString( message, TALKVOLUME_SHOUT );
-}
-
 // Called every heartbeat (i.e., every six seconds).
 void T2_HeartBeat()
 {
-    // if in combat, maybe it should change decision?
     if (GetIsInCombat())
         return;
 
-    // target = some player, or location ??
-    // improve: do not wait whole turn if something is empty or invalid
     string sTarget = GetLocalString( OBJECT_SELF, "TARGET" );
     if (sTarget == "")
-        T2_Speak("no starget");
+        {
+        SpeakString( "st1", TALKVOLUME_SHOUT );
         return;
+        }
 
     object oTarget = GetObjectByTag( sTarget );
     if (!GetIsObjectValid( oTarget ))
-        T2_Speak("objectinv_1");
+        {
+        SpeakString( "st2", TALKVOLUME_SHOUT );
         return;
+        }
 
     // If there is a member of my own team close to the target and closer than me,
     // and no enemy is closer and this other member is not in combat and
@@ -65,10 +61,11 @@ void T2_HeartBeat()
         sTarget = GetRandomTarget();
         SetLocalString( OBJECT_SELF, "TARGET", sTarget );
         oTarget = GetObjectByTag( sTarget );
-        // immediately pick next target ??
         if (!GetIsObjectValid( oTarget ))
-            T2_Speak("objectinv_2");
+            {
+            SpeakString( "st3", TALKVOLUME_SHOUT );
             return;
+            }
         fToTarget = GetDistanceToObject( oTarget );
     }
 
