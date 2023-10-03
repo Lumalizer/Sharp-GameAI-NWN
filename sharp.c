@@ -1,6 +1,23 @@
 #include "NW_I0_GENERIC"
 #include "our_constants"
 
+void ShoutClosestEnemyLocation(object oChar)
+{
+    object oClosestEnemy = GetNearestObject(OBJECT_TYPE_CREATURE, oChar, 1);
+
+    if (GetIsObjectValid(oClosestEnemy) && GetIsEnemy(oChar, oClosestEnemy))
+    {
+        string sEnemyName = GetName(oClosestEnemy);
+        string sMessage = "The closest enemy is: " + sEnemyName;
+        SpeakString(sMessage, TALKVOLUME_SHOUT);
+    }
+    else
+    {
+        SpeakString("No enemies nearby.", TALKVOLUME_SHOUT);
+    }
+}
+
+
 string T2_GetNotSoRandomTarget()
 {
     // The next line moves to the spawn location of the similar opponent
@@ -35,6 +52,8 @@ void T2_DetermineCombatRound( object oIntruder = OBJECT_INVALID, int nAI_Difficu
 // Called every heartbeat (i.e., every six seconds).
 void T2_HeartBeat()
 {
+    ShoutClosestEnemyLocation( OBJECT_SELF );
+
     if (GetIsInCombat())
         return;
 
@@ -158,5 +177,5 @@ void T2_UserDefined( int Event )
 // Called when the fight starts, just before the initial spawning.
 void T2_Initialize( string sColor )
 {
-    SetTeamName( sColor, "Default-" + GetStringLowerCase( sColor ) );
+    SetTeamName( sColor, "Team-" + GetStringLowerCase( sColor ) );
 }
