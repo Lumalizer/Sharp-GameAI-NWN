@@ -109,15 +109,19 @@ float T2_SetNewTargetIfNeeded( object oTarget, string sTarget, object self )
         return GetDistanceToObject( oTarget );
 }
 
-// Called every time that the AI needs to take a combat decision. The default is
-// a call to the NWN DetermineCombatRound.
-void T2_DetermineCombatRound( object oIntruder = OBJECT_INVALID, int nAI_Difficulty = 10 )
+void T2_DoHealing ()
 {
     if (TalentHeal())
     {
         SpeakString( "I am healing.", TALKVOLUME_SHOUT );
         return;
     }
+}
+// Called every time that the AI needs to take a combat decision. The default is
+// a call to the NWN DetermineCombatRound.
+void T2_DetermineCombatRound( object oIntruder = OBJECT_INVALID, int nAI_Difficulty = 10 )
+{
+    T2_DoHealing();
     DetermineCombatRound( oIntruder, nAI_Difficulty );
 }
 
@@ -128,6 +132,8 @@ void T2_HeartBeat()
 
     if (GetIsInCombat())
         return;
+
+    T2_DoHealing();
 
     string sTarget = GetLocalString( OBJECT_SELF, "TARGET" );
     if (sTarget == "")
