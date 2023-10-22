@@ -1,16 +1,21 @@
 #include "NW_I0_GENERIC"
 #include "our_constants"
 
-string T3_GetTargetAltar(string a1, string a2, string a3, string a4, string condition)
+string T3_GetTargetAltar(string condition)
 {
-    if (ClaimerOf(a1) == condition)
-        return a1;
-    else if (ClaimerOf(a2) == condition)
-        return a2;
-    else if (ClaimerOf(a3) == condition)
-        return a3;
-    else if (ClaimerOf(a4) == condition)
-        return a4;
+    string c_AL = WpClosestAltarLeft();
+    string c_AR = WpClosestAltarRight();
+    string f_AL = WpFurthestAltarLeft();
+    string f_AR = WpFurthestAltarRight();
+
+    if (ClaimerOf(c_AL) == condition)
+        return c_AL;
+    else if (ClaimerOf(c_AR) == condition)
+        return c_AR;
+    else if (ClaimerOf(f_AL) == condition)
+        return f_AL;
+    else if (ClaimerOf(f_AR) == condition)
+        return f_AR;
     else return "";
 }
 
@@ -19,39 +24,48 @@ string T3_ChooseStrategicAltar(object self)
     string sMyColor = MyColor(self);
     string sOpponentColor = OpponentColor(self);
 
-    string c_AL = WpClosestAltarLeft(self);
-    string c_AR = WpClosestAltarRight(self);
-    string f_AL = WpFurthestAltarLeft(self);
-    string f_AR = WpFurthestAltarRight(self);
-
-    string emptyAltar = T3_GetTargetAltar(c_AL, c_AR, f_AL, f_AR, "");
+    string emptyAltar = T3_GetTargetAltar("");
     if (emptyAltar != "")
         return emptyAltar;
+    
 
-    string defAltar = T3_GetTargetAltar(c_AL, c_AR, f_AL, f_AR, sMyColor);
+    string defAltar = T3_GetTargetAltar(sMyColor);
+    string attackAltar = T3_GetTargetAltar(sOpponentColor);
+    string targetAltar = "";
+    string mode = "";
+
     if (defAltar != "")
     {
-        object oAltar = GetObjectByTag(defAltar);
-        object oEnemy = GetNearestCreature(1, 1, oAltar, 1, -1, 2, 1);
-        if (GetIsObjectValid(oEnemy) && GetDistanceBetween(oAltar, oEnemy) <= 5.0) // Assuming 5.0 is a reasonable distance to detect threats
-        {
-            return defAltar;
-        }
+        targetAltar = defAltar;
+        mode = "defend";
     }
-
-    string attackAltar = T3_GetTargetAltar(c_AL, c_AR, f_AL, f_AR, sOpponentColor);
-    if (attackAltar != "")
+    else if (attackAltar != "")
     {
-        object oAltar = GetObjectByTag(attackAltar);
-        object oEnemy = GetNearestCreature(1, 1, oAltar, 1, -1, 2, 1);
-        if (!GetIsObjectValid(oEnemy) || GetDistanceBetween(oAltar, oEnemy) > 5.0) // Assuming 5.0 is a reasonable distance to detect defenders
-        {
-            return attackAltar;
-        }
+        targetAltar = attackAltar;
+        mode = "attack";
     }
-        return attackAltar;
+    else
+        return GetRandomTarget();
+
+    object oAltar = GetObjectByTag(targetAltar);
+    object oEnemy = GetNearestCreature(1, 1, oAltar, 1, -1, 2, 1);
+
+    if (mode == "defend")
+    {
+        // Assuming 5.0 is a reasonable distance to detect threats
+        if (GetIsObjectValid(oEnemy) && GetDistanceBetween(oAltar, oEnemy) <= 5.0)
+            return targetAltar;
+        
+    }
+    else if (mode == "attack")
+    {
+        // Assuming 5.0 is a reasonable distance to detect defenders
+        if (!GetIsObjectValid(oEnemy) || GetDistanceBetween(oAltar, oEnemy) > 5.0)
+            return targetAltar;
+    }   
 
     return GetRandomTarget();
+
 }
 
 // Called every time that the AI needs to take a combat decision. The default is
