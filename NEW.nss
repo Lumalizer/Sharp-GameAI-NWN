@@ -47,51 +47,46 @@ string T2_GetRandomTarget(object self) {
 }
 
 string T2_GetTargetAltar(string condition) {
-	// Check each altar and see if it meets the condition
-	int c_AL_Match = (ClaimerOf(WpClosestAltarLeft()) == condition);
-	int c_AR_Match = (ClaimerOf(WpClosestAltarRight()) == condition);
-	int f_AL_Match = (ClaimerOf(WpFurthestAltarLeft()) == condition);
-	int f_AR_Match = (ClaimerOf(WpFurthestAltarRight()) == condition);
-	int doubler_Match = (ClaimerOf(WpDoubler()) == condition);
+	string c_AL = WpClosestAltarLeft();
+	string c_AR = WpClosestAltarRight();
+	string f_AL = WpFurthestAltarLeft();
+	string f_AR = WpFurthestAltarRight();
+	string doubler = WpDoubler();
 
-	// Calculate total number of matches
-	int totalMatches = c_AL_Match + c_AR_Match + f_AL_Match + f_AR_Match + doubler_Match;
+	int emptyCount = 0;
+	if (ClaimerOf(c_AL) == condition) emptyCount++;
+	if (ClaimerOf(c_AR) == condition) emptyCount++;
+	if (ClaimerOf(f_AL) == condition) emptyCount++;
+	if (ClaimerOf(f_AR) == condition) emptyCount++;
+	if (ClaimerOf(doubler) == condition) emptyCount++;
 
-	// If no altars met the condition, return an empty string
-	if (totalMatches == 0) return "";
+	if (emptyCount == 0) return "";
 
-	// Generate a random choice based on the number of matches
-	int randomChoice = Random(totalMatches) + 1;
+	int randomInt = Random(emptyCount) + 1;
 
-	// Return the altar based on the random choice
-	if (c_AL_Match && randomChoice == 1) {
-		SpeakString("This random altar is chosen: Closest Altar Left. The number is 1.",
-					TALKVOLUME_SHOUT);
-		return WpClosestAltarLeft();
+	if (ClaimerOf(c_AL) == condition) {
+		randomInt--;
+		if (randomInt == 0) return c_AL;
 	}
-	if (c_AR_Match && randomChoice == 2) {
-		SpeakString("This random altar is chosen: Closest Altar Right. The number is 2.",
-					TALKVOLUME_SHOUT);
-		return WpClosestAltarRight();
+	if (ClaimerOf(c_AR) == condition) {
+		randomInt--;
+		if (randomInt == 0) return c_AR;
 	}
-	if (f_AL_Match && randomChoice == 3) {
-		SpeakString("This random altar is chosen: Furthest Altar Left. The number is 3.",
-					TALKVOLUME_SHOUT);
-		return WpFurthestAltarLeft();
+	if (ClaimerOf(f_AL) == condition) {
+		randomInt--;
+		if (randomInt == 0) return f_AL;
 	}
-	if (f_AR_Match && randomChoice == 4) {
-		SpeakString("This random altar is chosen: Furthest Altar Right. The number is 4.",
-					TALKVOLUME_SHOUT);
-		return WpFurthestAltarRight();
+	if (ClaimerOf(f_AR) == condition) {
+		randomInt--;
+		if (randomInt == 0) return f_AR;
 	}
-	if (doubler_Match && randomChoice == 5) {
-		SpeakString("This random altar is chosen: Doubler. The number is 5.", TALKVOLUME_SHOUT);
-		return WpDoubler();
+	if (ClaimerOf(doubler) == condition) {
+		randomInt--;
+		if (randomInt == 0) return doubler;
 	}
 
-	return "";	// Fallback return, should not be reached
+	return "";
 }
-
 string T2_GetNotSoRandomTarget(object self) {
 	string sMyColor = MyColor(self);
 	string sOpponentColor = OpponentColor(self);

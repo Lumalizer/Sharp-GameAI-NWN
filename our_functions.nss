@@ -96,3 +96,57 @@ void T2_DoHealing() {
 		return;
 	}
 }
+
+string T2_GetTargetAltar(string condition) {
+	string c_AL = WpClosestAltarLeft();
+	string c_AR = WpClosestAltarRight();
+	string f_AL = WpFurthestAltarLeft();
+	string f_AR = WpFurthestAltarRight();
+
+	if (ClaimerOf(c_AL) == condition)
+		return c_AL;
+	else if (ClaimerOf(c_AR) == condition)
+		return c_AR;
+	else if (ClaimerOf(f_AL) == condition)
+		return f_AL;
+	else if (ClaimerOf(f_AR) == condition)
+		return f_AR;
+	else
+		return "";
+}
+
+string T2_ChooseStrategicAltar(object self) {
+	string sMyColor = MyColor(self);
+	string sOpponentColor = OpponentColor(self);
+
+	string emptyAltar = T3_GetTargetAltar("");
+	if (emptyAltar != "") return emptyAltar;
+
+	string defAltar = T3_GetTargetAltar(sMyColor);
+	string attackAltar = T3_GetTargetAltar(sOpponentColor);
+	string targetAltar = "";
+	string mode = "";
+
+	if (defAltar != "") {
+		targetAltar = defAltar;
+		mode = "defend";
+	} else if (attackAltar != "") {
+		targetAltar = attackAltar;
+		mode = "attack";
+	} else
+		return T2_GetNotSoRandomTarget();
+
+	object oAltar = GetObjectByTag(targetAltar);
+	object oEnemy = GetNearestCreature(1, 1, oAltar, 1, -1, 2, 1);
+
+	if (mode == "defend") {
+		// Assuming 5.0 is a reasonable distance to detect threats
+		if (GetIsObjectValid(oEnemy) && GetDistanceBetween(oAltar, oEnemy) <= 5.0)
+			return targetAltar;
+	} else if (mode == "attack") {
+		// Assuming 5.0 is a reasonable distance to detect defenders
+		if (!GetIsObjectValid(oEnemy) || GetDistanceBetween(oAltar, oEnemy) > 5.0)
+			return targetAltar;
+	}
+	return T2_GetNotSoRandomTarget();
+}
