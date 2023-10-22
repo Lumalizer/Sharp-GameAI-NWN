@@ -1,217 +1,183 @@
 #include "NW_I0_GENERIC"
 #include "our_constants"
 
-void ShoutClosestEnemyLocation(object oPC)
-{
-    object oClosestEnemy = GetNearestObject(OBJECT_TYPE_CREATURE, oPC, 1);
+void ShoutClosestEnemyLocation(object oPC) {
+	object oClosestEnemy = GetNearestObject(OBJECT_TYPE_CREATURE, oPC, 1);
 
-    if (GetIsObjectValid(oClosestEnemy) && GetIsEnemy(oPC, oClosestEnemy))
-    {
-        string sEnemyName = GetName(oClosestEnemy);
-        string sMessage = "The closest enemy is: " + sEnemyName;
-        SpeakString(sMessage, TALKVOLUME_SHOUT);
-    }
-    else
-    {
-        // SpeakString("No enemies nearby.", TALKVOLUME_SHOUT);
-    }
+	if (GetIsObjectValid(oClosestEnemy) && GetIsEnemy(oPC, oClosestEnemy)) {
+		string sEnemyName = GetName(oClosestEnemy);
+		string sMessage = "The closest enemy is: " + sEnemyName;
+		SpeakString(sMessage, TALKVOLUME_SHOUT);
+	} else {
+		// SpeakString("No enemies nearby.", TALKVOLUME_SHOUT);
+	}
 }
 
+string T2_GetNotSoRandomTarget(object self) {
+	// The next line moves to the spawn location of the similar opponent
+	// ActionMoveToLocation( GetLocation( GetObjectByTag( "WP_" + OpponentColor( OBJECT_SELF ) + "_"
+	// + IntToString( GetLocalInt( OBJECT_SELF, "INDEX" ) ) ) ), TRUE );
 
-string T2_GetNotSoRandomTarget( object self )
-{
-    // The next line moves to the spawn location of the similar opponent
-    // ActionMoveToLocation( GetLocation( GetObjectByTag( "WP_" + OpponentColor( OBJECT_SELF ) + "_" + IntToString( GetLocalInt( OBJECT_SELF, "INDEX" ) ) ) ), TRUE );
+	if (IsWizardLeft(self))
+		return WpClosestAltarLeft();
+	else if (IsWizardRight(self))
+		return WpClosestAltarRight();
 
-    if (IsWizardLeft( self ))
-        return WpClosestAltarLeft();
-    else if (IsWizardRight( self ))
-        return WpClosestAltarRight();
+	int iTarget = 0;
 
-    int iTarget = 0;
+	if (IsMaster(self))
+		iTarget = Random(8);
+	else
+		iTarget = Random(10);
 
-    if (IsMaster( self ))
-        iTarget = Random( 8 );
-    else
-        iTarget = Random( 10 );
-
-    if (iTarget < 4)
-        return WpDoubler();
-    else if (iTarget < 6)
-        return WpFurthestAltarLeft();
-    else if (iTarget < 8)
-        return WpFurthestAltarRight();
-    else
-        {
-        int iTarget = Random(2);
-        if (iTarget == 0)
-            return WpClosestAltarLeft();
-        else
-            return WpClosestAltarRight();
-        }
-    return "";
+	if (iTarget < 4)
+		return WpDoubler();
+	else if (iTarget < 6)
+		return WpFurthestAltarLeft();
+	else if (iTarget < 8)
+		return WpFurthestAltarRight();
+	else {
+		int iTarget = Random(2);
+		if (iTarget == 0)
+			return WpClosestAltarLeft();
+		else
+			return WpClosestAltarRight();
+	}
+	return "";
 }
 
-int T2_DetermineNeedNewTarget( object oTarget, string sTarget, object self )
-{
-    // If there is a member of my own team close to the target and closer than me,
-    // and no enemy is closer and this other member is not in combat and
-    // has the same target, then choose a new target.
-    float fToTarget = GetDistanceToObject( oTarget );
-    int i = 1;
-    object oCreature = GetNearestObjectToLocation( OBJECT_TYPE_CREATURE, GetLocation( oTarget ), i );
-    while (GetIsObjectValid( oCreature ))
-    {
-        if (GetLocation( oCreature ) == GetLocation( self ))
-            break;
-        if (GetDistanceBetween( oCreature, oTarget ) > fToTarget)
-            break;
-        if (GetDistanceBetween( oCreature, oTarget ) > 5.0)
-            break;
-        if (!SameTeam( oCreature ))
-            break;
-        if (GetIsInCombat( oCreature ))
-            break;
-        if (GetLocalString( oCreature, "TARGET" ) == sTarget)
-        {
-            return TRUE;
-            break;
-        }
-        ++i;
-        oCreature = GetNearestObjectToLocation( OBJECT_TYPE_CREATURE, GetLocation( oTarget ), i );
-    }
-    return FALSE;
+int T2_DetermineNeedNewTarget(object oTarget, string sTarget, object self) {
+	// If there is a member of my own team close to the target and closer than me,
+	// and no enemy is closer and this other member is not in combat and
+	// has the same target, then choose a new target.
+	float fToTarget = GetDistanceToObject(oTarget);
+	int i = 1;
+	object oCreature = GetNearestObjectToLocation(OBJECT_TYPE_CREATURE, GetLocation(oTarget), i);
+	while (GetIsObjectValid(oCreature)) {
+		if (GetLocation(oCreature) == GetLocation(self)) break;
+		if (GetDistanceBetween(oCreature, oTarget) > fToTarget) break;
+		if (GetDistanceBetween(oCreature, oTarget) > 5.0) break;
+		if (!SameTeam(oCreature)) break;
+		if (GetIsInCombat(oCreature)) break;
+		if (GetLocalString(oCreature, "TARGET") == sTarget) {
+			return TRUE;
+			break;
+		}
+		++i;
+		oCreature = GetNearestObjectToLocation(OBJECT_TYPE_CREATURE, GetLocation(oTarget), i);
+	}
+	return FALSE;
 }
 
 // sets a new target, if needed, and returns the distance to the target
-float T2_SetNewTargetIfNeeded( object oTarget, string sTarget, object self )
-{
-        // if the new target is not valid, then choose another new target
-        int j = 0;
-        while (T2_DetermineNeedNewTarget( oTarget, sTarget, self ))
-        {
-            ++j;
-            sTarget = T2_GetNotSoRandomTarget( self );
-            SetLocalString( self, "TARGET", sTarget );
-            oTarget = GetObjectByTag( sTarget );
-            if (j > 5)
-                break;
-        }
+float T2_SetNewTargetIfNeeded(object oTarget, string sTarget, object self) {
+	// if the new target is not valid, then choose another new target
+	int j = 0;
+	while (T2_DetermineNeedNewTarget(oTarget, sTarget, self)) {
+		++j;
+		sTarget = T2_GetNotSoRandomTarget(self);
+		SetLocalString(self, "TARGET", sTarget);
+		oTarget = GetObjectByTag(sTarget);
+		if (j > 5) break;
+	}
 
-        if (j > 0)
-        {
-            string sMessage = "Going to: " + sTarget;
-            SpeakString(sMessage, TALKVOLUME_SHOUT);
-        }
+	if (j > 0) {
+		string sMessage = "Going to: " + sTarget;
+		SpeakString(sMessage, TALKVOLUME_SHOUT);
+	}
 
-        if (!GetIsObjectValid( oTarget ))
-            return 0.0;
-        return GetDistanceToObject( oTarget );
+	if (!GetIsObjectValid(oTarget)) return 0.0;
+	return GetDistanceToObject(oTarget);
 }
 
-void T2_DoHealing ()
-{
-    if (TalentHeal())
-    {
-        SpeakString( "I am healing.", TALKVOLUME_SHOUT );
-        return;
-    }
+void T2_DoHealing() {
+	if (TalentHeal()) {
+		SpeakString("I am healing.", TALKVOLUME_SHOUT);
+		return;
+	}
 }
 // Called every time that the AI needs to take a combat decision. The default is
 // a call to the NWN DetermineCombatRound.
-void T2_DetermineCombatRound( object oIntruder = OBJECT_INVALID, int nAI_Difficulty = 10 )
-{
-    T2_DoHealing();
-    DetermineCombatRound( oIntruder, nAI_Difficulty );
+void T2_DetermineCombatRound(object oIntruder = OBJECT_INVALID, int nAI_Difficulty = 10) {
+	T2_DoHealing();
+	DetermineCombatRound(oIntruder, nAI_Difficulty);
 }
 
 // Called every heartbeat (i.e., every six seconds).
-void T2_HeartBeat()
-{
-    ShoutClosestEnemyLocation( OBJECT_SELF );
+void T2_HeartBeat() {
+	ShoutClosestEnemyLocation(OBJECT_SELF);
 
-    if (GetIsInCombat())
-        return;
+	if (GetIsInCombat()) return;
 
-    T2_DoHealing();
+	T2_DoHealing();
 
-    string sTarget = GetLocalString( OBJECT_SELF, "TARGET" );
-    if (sTarget == "")
-        return;
+	string sTarget = GetLocalString(OBJECT_SELF, "TARGET");
+	if (sTarget == "") return;
 
-    object oTarget = GetObjectByTag( sTarget );
-    if (!GetIsObjectValid( oTarget ))
-        return;
+	object oTarget = GetObjectByTag(sTarget);
+	if (!GetIsObjectValid(oTarget)) return;
 
+	float fToTarget = T2_SetNewTargetIfNeeded(oTarget, sTarget, OBJECT_SELF);
 
-    float fToTarget = T2_SetNewTargetIfNeeded( oTarget, sTarget, OBJECT_SELF );
+	if (fToTarget > 0.5) ActionMoveToLocation(GetLocation(oTarget), TRUE);
 
-    if (fToTarget > 0.5)
-        ActionMoveToLocation( GetLocation( oTarget ), TRUE );
-
-    return;
+	return;
 }
 
 // Called when the NPC is spawned.
-void T2_Spawn()
-{
-    string sTarget = T2_GetNotSoRandomTarget( OBJECT_SELF );
-    string sMessage = "Going to: " + sTarget;
-    SpeakString(sMessage, TALKVOLUME_SHOUT);
-    SetLocalString( OBJECT_SELF, "TARGET", sTarget );
-    ActionMoveToLocation( GetLocation( GetObjectByTag( sTarget ) ), TRUE );
+void T2_Spawn() {
+	string sTarget = T2_GetNotSoRandomTarget(OBJECT_SELF);
+	string sMessage = "Going to: " + sTarget;
+	SpeakString(sMessage, TALKVOLUME_SHOUT);
+	SetLocalString(OBJECT_SELF, "TARGET", sTarget);
+	ActionMoveToLocation(GetLocation(GetObjectByTag(sTarget)), TRUE);
 }
 
 // This function is called when certain events take place, after the standard
 // NWN handling of these events has been performed.
-void T2_UserDefined( int Event )
-{
-    switch (Event)
-    {
-        // The NPC has just been attacked.
-        case EVENT_ATTACKED:
-            break;
+void T2_UserDefined(int Event) {
+	switch (Event) {
+		// The NPC has just been attacked.
+		case EVENT_ATTACKED:
+			break;
 
-        // The NPC was damaged.
-        case EVENT_DAMAGED:
-            break;
+		// The NPC was damaged.
+		case EVENT_DAMAGED:
+			break;
 
-        // At the end of one round of combat.
-        case EVENT_END_COMBAT_ROUND:
-            break;
+		// At the end of one round of combat.
+		case EVENT_END_COMBAT_ROUND:
+			break;
 
-        // Every heartbeat (i.e., every six seconds).
-        case EVENT_HEARTBEAT:
-            T2_HeartBeat();
-            break;
+		// Every heartbeat (i.e., every six seconds).
+		case EVENT_HEARTBEAT:
+			T2_HeartBeat();
+			break;
 
-        // Whenever the NPC perceives a new creature.
-        case EVENT_PERCEIVE:
-            break;
+		// Whenever the NPC perceives a new creature.
+		case EVENT_PERCEIVE:
+			break;
 
-        // When a spell is cast at the NPC.
-        case EVENT_SPELL_CAST_AT:
-            break;
+		// When a spell is cast at the NPC.
+		case EVENT_SPELL_CAST_AT:
+			break;
 
-        // Whenever the NPC's inventory is disturbed.
-        case EVENT_DISTURBED:
-            break;
+		// Whenever the NPC's inventory is disturbed.
+		case EVENT_DISTURBED:
+			break;
 
-        // Whenever the NPC dies.
-        case EVENT_DEATH:
-            break;
+		// Whenever the NPC dies.
+		case EVENT_DEATH:
+			break;
 
-        // When the NPC has just been spawned.
-        case EVENT_SPAWN:
-            T2_Spawn();
-            break;
-    }
+		// When the NPC has just been spawned.
+		case EVENT_SPAWN:
+			T2_Spawn();
+			break;
+	}
 
-    return;
+	return;
 }
 
 // Called when the fight starts, just before the initial spawning.
-void T2_Initialize( string sColor )
-{
-    SetTeamName( sColor, "Team-" + GetStringLowerCase( sColor ) );
-}
+void T2_Initialize(string sColor) { SetTeamName(sColor, "Team-" + GetStringLowerCase(sColor)); }
