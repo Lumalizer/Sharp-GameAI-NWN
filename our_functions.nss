@@ -46,50 +46,6 @@ string T2_GetNotSoRandomTarget(object self) {
 	return "";
 }
 
-int T2_DetermineNeedNewTarget(object oTarget, string sTarget, object self) {
-	// If there is a member of my own team close to the target and closer than me,
-	// and no enemy is closer and this other member is not in combat and
-	// has the same target, then choose a new target.
-	float fToTarget = GetDistanceToObject(oTarget);
-	int i = 1;
-	object oCreature = GetNearestObjectToLocation(OBJECT_TYPE_CREATURE, GetLocation(oTarget), i);
-	while (GetIsObjectValid(oCreature)) {
-		if (GetLocation(oCreature) == GetLocation(self)) break;
-		if (GetDistanceBetween(oCreature, oTarget) > fToTarget) break;
-		if (GetDistanceBetween(oCreature, oTarget) > 5.0) break;
-		if (!SameTeam(oCreature)) break;
-		if (GetIsInCombat(oCreature)) break;
-		if (GetLocalString(oCreature, "TARGET") == sTarget) {
-			return TRUE;
-			break;
-		}
-		++i;
-		oCreature = GetNearestObjectToLocation(OBJECT_TYPE_CREATURE, GetLocation(oTarget), i);
-	}
-	return FALSE;
-}
-
-// sets a new target, if needed, and returns the distance to the target
-float T2_SetNewTargetIfNeeded(object oTarget, string sTarget, object self) {
-	// if the new target is not valid, then choose another new target
-	int j = 0;
-	while (T2_DetermineNeedNewTarget(oTarget, sTarget, self)) {
-		++j;
-		sTarget = T2_GetNotSoRandomTarget(self);
-		SetLocalString(self, "TARGET", sTarget);
-		oTarget = GetObjectByTag(sTarget);
-		if (j > 5) break;
-	}
-
-	if (j > 0) {
-		string sMessage = "Going to: " + sTarget;
-		SpeakString(sMessage, TALKVOLUME_SHOUT);
-	}
-
-	if (!GetIsObjectValid(oTarget)) return 0.0;
-	return GetDistanceToObject(oTarget);
-}
-
 void T2_DoHealing() {
 	if (TalentHeal()) {
 		SpeakString("I am healing.", TALKVOLUME_SHOUT);
@@ -149,4 +105,53 @@ string T2_ChooseStrategicAltar(object self) {
 			return targetAltar;
 	}
 	return T2_GetNotSoRandomTarget(self);
+}
+
+int T2_DetermineNeedNewTarget(object oTarget, string sTarget, object self) {
+	// If there is a member of my own team close to the target and closer than me,
+	// and no enemy is closer and this other member is not in combat and
+	// has the same target, then choose a new target.
+	float fToTarget = GetDistanceToObject(oTarget);
+	int i = 1;
+	object oCreature = GetNearestObjectToLocation(OBJECT_TYPE_CREATURE, GetLocation(oTarget), i);
+	while (GetIsObjectValid(oCreature)) {
+		if (GetLocation(oCreature) == GetLocation(self)) break;
+		if (GetDistanceBetween(oCreature, oTarget) > fToTarget) break;
+		if (GetDistanceBetween(oCreature, oTarget) > 5.0) break;
+		if (!SameTeam(oCreature)) break;
+		if (GetIsInCombat(oCreature)) break;
+		if (GetLocalString(oCreature, "TARGET") == sTarget) {
+			return TRUE;
+			break;
+		}
+		++i;
+		oCreature = GetNearestObjectToLocation(OBJECT_TYPE_CREATURE, GetLocation(oTarget), i);
+	}
+	return FALSE;
+}
+
+// sets a new target, if needed, and returns the distance to the target
+float T2_SetNewTargetIfNeeded(object oTarget, string sTarget, object self,
+							  string method = "random") {
+	// if the new target is not valid, then choose another new target
+	int j = 0;
+	while (T2_DetermineNeedNewTarget(oTarget, sTarget, self)) {
+		++j;
+		if (method == "random")
+			sTarget = T2_GetNotSoRandomTarget(self);
+		else if (method == "strategic")
+			sTarget = T2_ChooseStrategicAltar(self);
+
+		SetLocalString(self, "TARGET", sTarget);
+		oTarget = GetObjectByTag(sTarget);
+		if (j > 5) break;
+	}
+
+	if (j > 0) {
+		string sMessage = "Going to: " + sTarget;
+		SpeakString(sMessage, TALKVOLUME_SHOUT);
+	}
+
+	if (!GetIsObjectValid(oTarget)) return 0.0;
+	return GetDistanceToObject(oTarget);
 }
