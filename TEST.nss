@@ -5,8 +5,6 @@ string T2_ChooseStrategicAltar(object self)
 {
     string sMyColor = MyColor(OBJECT_SELF);
     string sOpponentColor = OpponentColor(OBJECT_SELF);
-    string sAltar;
-    int i;
 
     string c_AL = WpClosestAltarLeft(self);
     string c_AR = WpClosestAltarRight(self);
