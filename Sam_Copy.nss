@@ -5,17 +5,17 @@
 // Called every time that the AI needs to take a combat decision. The default is
 // a call to the NWN DetermineCombatRound.
 void T3_DetermineCombatRound(object oIntruder = OBJECT_INVALID, int nAI_Difficulty = 10) {
-	T2_DoHealing();
+	DoHealing();
 	DetermineCombatRound(oIntruder, nAI_Difficulty);
 }
 
 // Called every heartbeat (i.e., every six seconds).
 void T3_HeartBeat() {
-	T2_ShoutClosestEnemyLocation(OBJECT_SELF);
+	ShoutClosestEnemyLocation(OBJECT_SELF);
 
 	if (GetIsInCombat()) return;
 
-	T2_DoHealing();
+	DoHealing();
 
 	string sTarget = GetLocalString(OBJECT_SELF, "TARGET");
 	if (sTarget == "") return;
@@ -23,7 +23,7 @@ void T3_HeartBeat() {
 	object oTarget = GetObjectByTag(sTarget);
 	if (!GetIsObjectValid(oTarget)) return;
 
-	float fToTarget = T2_SetNewTargetIfNeeded(oTarget, sTarget, OBJECT_SELF, "strategic");
+	float fToTarget = SetNewTargetIfNeeded(oTarget, sTarget, OBJECT_SELF, "strategic");
 
 	if (fToTarget > 0.5) ActionMoveToLocation(GetLocation(oTarget), TRUE);
 
@@ -32,7 +32,7 @@ void T3_HeartBeat() {
 
 // Called when the NPC is spawned.
 void T3_Spawn() {
-	string sTarget = T2_ChooseStrategicAltar(OBJECT_SELF);
+	string sTarget = ChooseStrategicAltar(OBJECT_SELF);
 	string sMessage = "Going to: " + sTarget;
 	SpeakString(sMessage, TALKVOLUME_SHOUT);
 	SetLocalString(OBJECT_SELF, "TARGET", sTarget);

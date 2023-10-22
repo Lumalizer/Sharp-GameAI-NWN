@@ -46,7 +46,7 @@ void T4_HeartBeat() {
 	}
 
 	if (bNewTarget) {
-		sTarget = T2_GetNotSoRandomTarget(OBJECT_SELF);
+		sTarget = GetNotSoRandomTarget(OBJECT_SELF);
 		SetLocalString(OBJECT_SELF, "TARGET", sTarget);
 		oTarget = GetObjectByTag(sTarget);
 		if (!GetIsObjectValid(oTarget)) {
@@ -62,7 +62,7 @@ void T4_HeartBeat() {
 }
 
 void T4_Spawn() {
-	string sTarget = T2_GetNotSoRandomTarget(OBJECT_SELF);
+	string sTarget = GetNotSoRandomTarget(OBJECT_SELF);
 	SetLocalString(OBJECT_SELF, "TARGET", sTarget);
 
 	ActionMoveToLocation(GetLocation(GetObjectByTag(sTarget)), TRUE);

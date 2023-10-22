@@ -1,7 +1,7 @@
 #include "NW_I0_GENERIC"
 #include "our_constants"
 
-void T2_ShoutClosestEnemyLocation(object oPC) {
+void ShoutClosestEnemyLocation(object oPC) {
 	object oClosestEnemy = GetNearestObject(OBJECT_TYPE_CREATURE, oPC, 1);
 
 	if (GetIsObjectValid(oClosestEnemy) && GetIsEnemy(oPC, oClosestEnemy)) {
@@ -13,7 +13,7 @@ void T2_ShoutClosestEnemyLocation(object oPC) {
 	}
 }
 
-string T2_GetNotSoRandomTarget(object self) {
+string GetNotSoRandomTarget(object self) {
 	// The next line moves to the spawn location of the similar opponent
 	// ActionMoveToLocation( GetLocation( GetObjectByTag( "WP_" + OpponentColor( OBJECT_SELF ) + "_"
 	// + IntToString( GetLocalInt( OBJECT_SELF, "INDEX" ) ) ) ), TRUE );
@@ -46,14 +46,14 @@ string T2_GetNotSoRandomTarget(object self) {
 	return "";
 }
 
-void T2_DoHealing() {
+void DoHealing() {
 	if (TalentHeal()) {
 		SpeakString("I am healing.", TALKVOLUME_SHOUT);
 		return;
 	}
 }
 
-string T2_GetTargetAltar(string condition) {
+string GetTargetAltar(string condition) {
 	string c_AL = WpClosestAltarLeft();
 	string c_AR = WpClosestAltarRight();
 	string f_AL = WpFurthestAltarLeft();
@@ -71,15 +71,15 @@ string T2_GetTargetAltar(string condition) {
 		return "";
 }
 
-string T2_ChooseStrategicAltar(object self) {
+string ChooseStrategicAltar(object self) {
 	string sMyColor = MyColor(self);
 	string sOpponentColor = OpponentColor(self);
 
-	string emptyAltar = T2_GetTargetAltar("");
+	string emptyAltar = GetTargetAltar("");
 	if (emptyAltar != "") return emptyAltar;
 
-	string defAltar = T2_GetTargetAltar(sMyColor);
-	string attackAltar = T2_GetTargetAltar(sOpponentColor);
+	string defAltar = GetTargetAltar(sMyColor);
+	string attackAltar = GetTargetAltar(sOpponentColor);
 	string targetAltar = "";
 	string mode = "";
 
@@ -90,7 +90,7 @@ string T2_ChooseStrategicAltar(object self) {
 		targetAltar = attackAltar;
 		mode = "attack";
 	} else
-		return T2_GetNotSoRandomTarget(self);
+		return GetNotSoRandomTarget(self);
 
 	object oAltar = GetObjectByTag(targetAltar);
 	object oEnemy = GetNearestCreature(1, 1, oAltar, 1, -1, 2, 1);
@@ -104,10 +104,10 @@ string T2_ChooseStrategicAltar(object self) {
 		if (!GetIsObjectValid(oEnemy) || GetDistanceBetween(oAltar, oEnemy) > 5.0)
 			return targetAltar;
 	}
-	return T2_GetNotSoRandomTarget(self);
+	return GetNotSoRandomTarget(self);
 }
 
-int T2_DetermineNeedNewTarget(object oTarget, string sTarget, object self) {
+int DetermineNeedNewTarget(object oTarget, string sTarget, object self) {
 	// If there is a member of my own team close to the target and closer than me,
 	// and no enemy is closer and this other member is not in combat and
 	// has the same target, then choose a new target.
@@ -131,16 +131,15 @@ int T2_DetermineNeedNewTarget(object oTarget, string sTarget, object self) {
 }
 
 // sets a new target, if needed, and returns the distance to the target
-float T2_SetNewTargetIfNeeded(object oTarget, string sTarget, object self,
-							  string method = "random") {
+float SetNewTargetIfNeeded(object oTarget, string sTarget, object self, string method = "random") {
 	// if the new target is not valid, then choose another new target
 	int j = 0;
-	while (T2_DetermineNeedNewTarget(oTarget, sTarget, self)) {
+	while (DetermineNeedNewTarget(oTarget, sTarget, self)) {
 		++j;
 		if (method == "random")
-			sTarget = T2_GetNotSoRandomTarget(self);
+			sTarget = GetNotSoRandomTarget(self);
 		else if (method == "strategic")
-			sTarget = T2_ChooseStrategicAltar(self);
+			sTarget = ChooseStrategicAltar(self);
 
 		SetLocalString(self, "TARGET", sTarget);
 		oTarget = GetObjectByTag(sTarget);
