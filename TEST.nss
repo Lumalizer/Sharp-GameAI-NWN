@@ -1,63 +1,68 @@
 #include "NW_I0_GENERIC"
 #include "our_constants"
 
-string T2_ChooseStrategicAltar()
+string T2_ChooseStrategicAltar(object self)
 {
     string sMyColor = MyColor(OBJECT_SELF);
     string sOpponentColor = OpponentColor(OBJECT_SELF);
     string sAltar;
     int i;
 
-    for (i = 1; i <= 4; i++)
-    {
-        if (i <= 2)
-            sAltar = "ALTAR_BLUE_" + IntToString(i);
-        else
-            sAltar = "ALTAR_RED_" + IntToString(i - 2);
+    string c_AL = WpClosestAltarLeft(self);
+    string c_AR = WpClosestAltarRight(self);
+    string f_AL = WpFurthestAltarLeft(self);
+    string f_AR = WpFurthestAltarRight(self);
 
-        if (ClaimerOf(sAltar) == "")
+    if (ClaimerOf(c_AL) == "")
+        return c_AL;
+    else if (ClaimerOf(c_AR) == "")
+        return c_AR;
+    else if (ClaimerOf(f_AL) == "")
+        return f_AL;
+    else if (ClaimerOf(f_AR) == "")
+        return f_AR;
+
+    if (ClaimerOf(c_AL) == sMyColor)
+        string sAltar = c_AL;
+    else if (ClaimerOf(c_AR) == sMyColor)
+        string sAltar = c_AR;
+    else if (ClaimerOf(f_AL) == sMyColor)
+        string sAltar = f_AL;
+    else if (ClaimerOf(f_AR) == sMyColor)
+        string sAltar = f_AR;
+    else
+        string sAltar = "";
+
+    if (sAltar != "")
+    {
+        object oAltar = GetObjectByTag(sAltar);
+        object oEnemy = GetNearestCreature(1, 1, oAltar, 1, -1, 2, 1);
+        if (GetIsObjectValid(oEnemy) && GetDistanceBetween(oAltar, oEnemy) <= 5.0) // Assuming 5.0 is a reasonable distance to detect threats
         {
-            return "WP_" + sAltar;
+            return sAltar;
         }
     }
 
-    for (i = 1; i <= 4; i++)
-    {
-        if (i <= 2)
-            sAltar = "ALTAR_BLUE_" + IntToString(i);
-        else
-            sAltar = "ALTAR_RED_" + IntToString(i - 2);
+    if (ClaimerOf(c_AL) == sOpponentColor)
+        string sAltar = c_AL;
+    else if (ClaimerOf(c_AR) == sOpponentColor)
+        string sAltar = c_AR;
+    else if (ClaimerOf(f_AL) == sOpponentColor)
+        string sAltar = f_AL;
+    else if (ClaimerOf(f_AR) == sOpponentColor)
+        string sAltar = f_AR;
+    else
+        string sAltar = "";
 
-        if (ClaimerOf(sAltar) == sMyColor)
+    if (sAltar != "")
+    {
+        object oAltar = GetObjectByTag(sAltar);
+        object oEnemy = GetNearestCreature(1, 1, oAltar, 1, -1, 2, 1);
+        if (!GetIsObjectValid(oEnemy) || GetDistanceBetween(oAltar, oEnemy) > 5.0) // Assuming 5.0 is a reasonable distance to detect defenders
         {
-            object oAltar = GetObjectByTag(sAltar);
-            object oEnemy = GetNearestCreature(1, 1, oAltar, 1, -1, 2, 1);
-            if (GetIsObjectValid(oEnemy) && GetDistanceBetween(oAltar, oEnemy) <= 5.0) // Assuming 5.0 is a reasonable distance to detect threats
-            {
-                return "WP_" + sAltar;
-            }
+            return sAltar;
         }
     }
-
-
-    for (i = 1; i <= 4; i++)
-    {
-        if (i <= 2)
-            sAltar = "ALTAR_BLUE_" + IntToString(i);
-        else
-            sAltar = "ALTAR_RED_" + IntToString(i - 2);
-
-        if (ClaimerOf(sAltar) == sOpponentColor)
-        {
-            object oAltar = GetObjectByTag(sAltar);
-            object oEnemy = GetNearestCreature(1, 1, oAltar, 1, -1, 2, 1);
-            if (!GetIsObjectValid(oEnemy) || GetDistanceBetween(oAltar, oEnemy) > 5.0) // Assuming 5.0 is a reasonable distance to detect defenders
-            {
-                return "WP_" + sAltar;
-            }
-        }
-    }
-
 
     return GetRandomTarget();
 }
@@ -130,7 +135,7 @@ void T2_HeartBeat()
 
     if (bNewTarget)
     {
-        sTarget = T2_ChooseStrategicAltar();
+        sTarget = T2_ChooseStrategicAltar( OBJECT_SELF );
         SetLocalString( OBJECT_SELF, "TARGET", sTarget );
         oTarget = GetObjectByTag( sTarget );
         if (!GetIsObjectValid( oTarget ))
@@ -150,7 +155,7 @@ void T2_HeartBeat()
 // Called when the NPC is spawned.
 void T2_Spawn()
 {
-    string sTarget = T2_ChooseStrategicAltar();
+    string sTarget = T2_ChooseStrategicAltar( OBJECT_SELF );
     SetLocalString( OBJECT_SELF, "TARGET", sTarget );
     ActionMoveToLocation( GetLocation( GetObjectByTag( sTarget ) ), TRUE );
 }
