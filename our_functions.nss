@@ -119,11 +119,11 @@ string T2_ChooseStrategicAltar(object self) {
 	string sMyColor = MyColor(self);
 	string sOpponentColor = OpponentColor(self);
 
-	string emptyAltar = T3_GetTargetAltar("");
+	string emptyAltar = T2_GetTargetAltar("");
 	if (emptyAltar != "") return emptyAltar;
 
-	string defAltar = T3_GetTargetAltar(sMyColor);
-	string attackAltar = T3_GetTargetAltar(sOpponentColor);
+	string defAltar = T2_GetTargetAltar(sMyColor);
+	string attackAltar = T2_GetTargetAltar(sOpponentColor);
 	string targetAltar = "";
 	string mode = "";
 
@@ -134,7 +134,7 @@ string T2_ChooseStrategicAltar(object self) {
 		targetAltar = attackAltar;
 		mode = "attack";
 	} else
-		return T2_GetNotSoRandomTarget();
+		return T2_GetNotSoRandomTarget(self);
 
 	object oAltar = GetObjectByTag(targetAltar);
 	object oEnemy = GetNearestCreature(1, 1, oAltar, 1, -1, 2, 1);
@@ -148,5 +148,5 @@ string T2_ChooseStrategicAltar(object self) {
 		if (!GetIsObjectValid(oEnemy) || GetDistanceBetween(oAltar, oEnemy) > 5.0)
 			return targetAltar;
 	}
-	return T2_GetNotSoRandomTarget();
+	return T2_GetNotSoRandomTarget(self);
 }
