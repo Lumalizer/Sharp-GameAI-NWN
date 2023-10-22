@@ -70,11 +70,32 @@ string T2_GetTargetAltar(string condition)
     int randomChoice = Random(totalMatches) + 1;
 
     // Return the altar based on the random choice
-    if (c_AL_Match && randomChoice == 1) return WpClosestAltarLeft();
-    if (c_AR_Match && randomChoice == 2) return WpClosestAltarRight();
-    if (f_AL_Match && randomChoice == 3) return WpFurthestAltarLeft();
-    if (f_AR_Match && randomChoice == 4) return WpFurthestAltarRight();
-    if (doubler_Match && randomChoice == 5) return WpDoubler();
+     if (c_AL_Match && randomChoice == 1) 
+    {
+        SpeakString("This random altar is chosen: Closest Altar Left. The number is 1.", TALKVOLUME_SHOUT);
+        return WpClosestAltarLeft();
+    }
+    if (c_AR_Match && randomChoice == 2) 
+    {
+        SpeakString("This random altar is chosen: Closest Altar Right. The number is 2.", TALKVOLUME_SHOUT);
+        return WpClosestAltarRight();
+    }
+    if (f_AL_Match && randomChoice == 3) 
+    {
+        SpeakString("This random altar is chosen: Furthest Altar Left. The number is 3.", TALKVOLUME_SHOUT);
+        return WpFurthestAltarLeft();
+    }
+    if (f_AR_Match && randomChoice == 4) 
+    {
+        SpeakString("This random altar is chosen: Furthest Altar Right. The number is 4.", TALKVOLUME_SHOUT);
+        return WpFurthestAltarRight();
+    }
+    if (doubler_Match && randomChoice == 5) 
+    {
+        SpeakString("This random altar is chosen: Doubler. The number is 5.", TALKVOLUME_SHOUT);
+        return WpDoubler();
+    }
+
 
     return ""; // Fallback return, should not be reached
 }
