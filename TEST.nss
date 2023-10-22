@@ -1,79 +1,68 @@
 #include "NW_I0_GENERIC"
 #include "our_constants"
 
-string T2_ChooseStrategicAltar(object self)
+string T3_GetTargetAltar(string a1, string a2, string a3, string a4, string condition)
 {
-    string sMyColor = MyColor(OBJECT_SELF);
-    string sOpponentColor = OpponentColor(OBJECT_SELF);
+    if (ClaimerOf(a1) == condition)
+        return a1;
+    else if (ClaimerOf(a2) == condition)
+        return a2;
+    else if (ClaimerOf(a3) == condition)
+        return a3;
+    else if (ClaimerOf(a4) == condition)
+        return a4;
+    else return "";
+}
+
+string T3_ChooseStrategicAltar(object self)
+{
+    string sMyColor = MyColor(self);
+    string sOpponentColor = OpponentColor(self);
 
     string c_AL = WpClosestAltarLeft(self);
     string c_AR = WpClosestAltarRight(self);
     string f_AL = WpFurthestAltarLeft(self);
     string f_AR = WpFurthestAltarRight(self);
 
-    if (ClaimerOf(c_AL) == "")
-        return c_AL;
-    else if (ClaimerOf(c_AR) == "")
-        return c_AR;
-    else if (ClaimerOf(f_AL) == "")
-        return f_AL;
-    else if (ClaimerOf(f_AR) == "")
-        return f_AR;
+    string emptyAltar = T3_GetTargetAltar(c_AL, c_AR, f_AL, f_AR, "");
+    if (emptyAltar != "")
+        return emptyAltar;
 
-    if (ClaimerOf(c_AL) == sMyColor)
-        string sAltar = c_AL;
-    else if (ClaimerOf(c_AR) == sMyColor)
-        string sAltar = c_AR;
-    else if (ClaimerOf(f_AL) == sMyColor)
-        string sAltar = f_AL;
-    else if (ClaimerOf(f_AR) == sMyColor)
-        string sAltar = f_AR;
-    else
-        string sAltar = "";
-
-    if (sAltar != "")
+    string defAltar = T3_GetTargetAltar(c_AL, c_AR, f_AL, f_AR, sMyColor);
+    if (defAltar != "")
     {
-        object oAltar = GetObjectByTag(sAltar);
+        object oAltar = GetObjectByTag(defAltar);
         object oEnemy = GetNearestCreature(1, 1, oAltar, 1, -1, 2, 1);
         if (GetIsObjectValid(oEnemy) && GetDistanceBetween(oAltar, oEnemy) <= 5.0) // Assuming 5.0 is a reasonable distance to detect threats
         {
-            return sAltar;
+            return defAltar;
         }
     }
 
-    if (ClaimerOf(c_AL) == sOpponentColor)
-        string sAltar = c_AL;
-    else if (ClaimerOf(c_AR) == sOpponentColor)
-        string sAltar = c_AR;
-    else if (ClaimerOf(f_AL) == sOpponentColor)
-        string sAltar = f_AL;
-    else if (ClaimerOf(f_AR) == sOpponentColor)
-        string sAltar = f_AR;
-    else
-        string sAltar = "";
-
-    if (sAltar != "")
+    string attackAltar = T3_GetTargetAltar(c_AL, c_AR, f_AL, f_AR, sOpponentColor);
+    if (attackAltar != "")
     {
-        object oAltar = GetObjectByTag(sAltar);
+        object oAltar = GetObjectByTag(attackAltar);
         object oEnemy = GetNearestCreature(1, 1, oAltar, 1, -1, 2, 1);
         if (!GetIsObjectValid(oEnemy) || GetDistanceBetween(oAltar, oEnemy) > 5.0) // Assuming 5.0 is a reasonable distance to detect defenders
         {
-            return sAltar;
+            return attackAltar;
         }
     }
+        return attackAltar;
 
     return GetRandomTarget();
 }
 
 // Called every time that the AI needs to take a combat decision. The default is
 // a call to the NWN DetermineCombatRound.
-void T2_DetermineCombatRound( object oIntruder = OBJECT_INVALID, int nAI_Difficulty = 10 )
+void T3_DetermineCombatRound( object oIntruder = OBJECT_INVALID, int nAI_Difficulty = 10 )
 {
     DetermineCombatRound( oIntruder, nAI_Difficulty );
 }
 
 // Called every heartbeat (i.e., every six seconds).
-void T2_HeartBeat()
+void T3_HeartBeat()
 {
 
     if (IsMaster())
@@ -84,7 +73,7 @@ void T2_HeartBeat()
         SpeakString( "HB count: " + IntToString( iHBcount), TALKVOLUME_SHOUT );
     }
 
-    SpeakString( "hello", TALKVOLUME_SHOUT );
+    // SpeakString( "hello", TALKVOLUME_SHOUT );
 
     if (GetIsInCombat())
         return;
@@ -99,7 +88,7 @@ void T2_HeartBeat()
     object oTarget = GetObjectByTag( sTarget );
     if (!GetIsObjectValid( oTarget ))
         {
-        SpeakString( "st2", TALKVOLUME_SHOUT );
+        SpeakString( "sT3", TALKVOLUME_SHOUT );
         return;
         }
 
@@ -133,7 +122,7 @@ void T2_HeartBeat()
 
     if (bNewTarget)
     {
-        sTarget = T2_ChooseStrategicAltar( OBJECT_SELF );
+        sTarget = T3_ChooseStrategicAltar( OBJECT_SELF );
         SetLocalString( OBJECT_SELF, "TARGET", sTarget );
         oTarget = GetObjectByTag( sTarget );
         if (!GetIsObjectValid( oTarget ))
@@ -151,16 +140,16 @@ void T2_HeartBeat()
 }
 
 // Called when the NPC is spawned.
-void T2_Spawn()
+void T3_Spawn()
 {
-    string sTarget = T2_ChooseStrategicAltar( OBJECT_SELF );
+    string sTarget = T3_ChooseStrategicAltar( OBJECT_SELF );
     SetLocalString( OBJECT_SELF, "TARGET", sTarget );
     ActionMoveToLocation( GetLocation( GetObjectByTag( sTarget ) ), TRUE );
 }
 
 // This function is called when certain events take place, after the standard
 // NWN handling of these events has been performed.
-void T2_UserDefined( int Event )
+void T3_UserDefined( int Event )
 {
     switch (Event)
     {
@@ -178,7 +167,7 @@ void T2_UserDefined( int Event )
 
         // Every heartbeat (i.e., every six seconds).
         case EVENT_HEARTBEAT:
-            T2_HeartBeat();
+            T3_HeartBeat();
             break;
 
         // Whenever the NPC perceives a new creature.
@@ -199,7 +188,7 @@ void T2_UserDefined( int Event )
 
         // When the NPC has just been spawned.
         case EVENT_SPAWN:
-            T2_Spawn();
+            T3_Spawn();
             break;
     }
 
@@ -207,7 +196,7 @@ void T2_UserDefined( int Event )
 }
 
 // Called when the fight starts, just before the initial spawning.
-void T2_Initialize( string sColor )
+void T3_Initialize( string sColor )
 {
     SetTeamName( sColor, "Default-" + GetStringLowerCase( sColor ) );
 }
