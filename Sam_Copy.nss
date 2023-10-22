@@ -4,13 +4,13 @@
 
 // Called every time that the AI needs to take a combat decision. The default is
 // a call to the NWN DetermineCombatRound.
-void T2_DetermineCombatRound(object oIntruder = OBJECT_INVALID, int nAI_Difficulty = 10) {
+void T3_DetermineCombatRound(object oIntruder = OBJECT_INVALID, int nAI_Difficulty = 10) {
 	T2_DoHealing();
 	DetermineCombatRound(oIntruder, nAI_Difficulty);
 }
 
 // Called every heartbeat (i.e., every six seconds).
-void T2_HeartBeat() {
+void T3_HeartBeat() {
 	T2_ShoutClosestEnemyLocation(OBJECT_SELF);
 
 	if (GetIsInCombat()) return;
@@ -31,7 +31,7 @@ void T2_HeartBeat() {
 }
 
 // Called when the NPC is spawned.
-void T2_Spawn() {
+void T3_Spawn() {
 	string sTarget = T2_ChooseStrategicAltar(OBJECT_SELF);
 	string sMessage = "Going to: " + sTarget;
 	SpeakString(sMessage, TALKVOLUME_SHOUT);
@@ -41,7 +41,7 @@ void T2_Spawn() {
 
 // This function is called when certain events take place, after the standard
 // NWN handling of these events has been performed.
-void T2_UserDefined(int Event) {
+void T3_UserDefined(int Event) {
 	switch (Event) {
 		// The NPC has just been attacked.
 		case EVENT_ATTACKED:
@@ -57,7 +57,7 @@ void T2_UserDefined(int Event) {
 
 		// Every heartbeat (i.e., every six seconds).
 		case EVENT_HEARTBEAT:
-			T2_HeartBeat();
+			T3_HeartBeat();
 			break;
 
 		// Whenever the NPC perceives a new creature.
@@ -78,7 +78,7 @@ void T2_UserDefined(int Event) {
 
 		// When the NPC has just been spawned.
 		case EVENT_SPAWN:
-			T2_Spawn();
+			T3_Spawn();
 			break;
 	}
 
@@ -86,4 +86,4 @@ void T2_UserDefined(int Event) {
 }
 
 // Called when the fight starts, just before the initial spawning.
-void T2_Initialize(string sColor) { SetTeamName(sColor, "Team-" + GetStringLowerCase(sColor)); }
+void T3_Initialize(string sColor) { SetTeamName(sColor, "Team-" + GetStringLowerCase(sColor)); }
