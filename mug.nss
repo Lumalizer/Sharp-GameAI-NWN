@@ -1,13 +1,12 @@
 #include "NW_I0_GENERIC"
 #include "our_constants"
+#include "our_functions"
 
 void T4_DetermineCombatRound(object oIntruder = OBJECT_INVALID, int nAI_Difficulty = 10) {
 	DetermineCombatRound(oIntruder, nAI_Difficulty);
 }
 
 void ApplyBuffs(object oNPC) {}
-
-string T4_GetNotSoRandomTarget() { return "SomeTargetTag"; }
 
 void T4_HeartBeat() {
 	if (GetIsInCombat()) return;
@@ -47,7 +46,7 @@ void T4_HeartBeat() {
 	}
 
 	if (bNewTarget) {
-		sTarget = T4_GetNotSoRandomTarget();
+		sTarget = T2_GetNotSoRandomTarget(OBJECT_SELF);
 		SetLocalString(OBJECT_SELF, "TARGET", sTarget);
 		oTarget = GetObjectByTag(sTarget);
 		if (!GetIsObjectValid(oTarget)) {
@@ -63,7 +62,7 @@ void T4_HeartBeat() {
 }
 
 void T4_Spawn() {
-	string sTarget = T4_GetNotSoRandomTarget();
+	string sTarget = T2_GetNotSoRandomTarget(OBJECT_SELF);
 	SetLocalString(OBJECT_SELF, "TARGET", sTarget);
 
 	ActionMoveToLocation(GetLocation(GetObjectByTag(sTarget)), TRUE);
