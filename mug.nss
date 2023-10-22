@@ -1,173 +1,136 @@
 #include "NW_I0_GENERIC"
 #include "our_constants"
 
-void T4_DetermineCombatRound(object oIntruder = OBJECT_INVALID, int nAI_Difficulty = 10) {
-	DetermineCombatRound(oIntruder, nAI_Difficulty);
+void T4_DetermineCombatRound( object oIntruder = OBJECT_INVALID, int nAI_Difficulty = 10 )
+{
+    DetermineCombatRound( oIntruder, nAI_Difficulty );
 }
 
-string T4_GetNotSoRandomTarget() { return "SomeTargetTag"; }
+void ApplyBuffs(object oNPC)
+{
 
-void T4_HeartBeat() {
-	if (GetIsInCombat()) return;
+}
 
-	string sTarget = GetLocalString(OBJECT_SELF, "TARGET");
-	if (sTarget == "") {
-		SpeakString("st1", TALKVOLUME_SHOUT );
-		eturn;
-	
-
-	bject oTarget = GetObjectByTag( Target ;
-	f (!GetIsObjectValid( Target ) 
-		peakString( sT4", TALKVOLUME_SHOUT );
-
-		turn;
-
-	
-
-	 (nAI_Difficulty >= 7)
- 
-
-		plyBuffs(OBJECT_SELF);
-
-	
-
-
-	oat fToTarget = GetDistanceToObject( oarget )
-
-	t i = 1;
-
-	t bNewTarget = FALSE;
-
-	ject oCreature = GetNearestObjectToLocation( OJECT_TYPE_CREATURE, GetLocation( oarget ) i )
-
-	ile (GetIsObjectValid( oreature )
- 
-
-		 (GetLocation( oreature )== GetLocation( OJECT_SELF )
- eak;
-
-		 (GetDistanceBetween( oreature, oTarget )> fToTarget)
- eak;
-
-		 (GetDistanceBetween( oreature, oTarget )> 5.0)
- eak;
-
-		 (!SameTeam( oreature )
- eak;
-
-		 (GetIsInCombat( oreature )
- eak;
-
-		 (GetLocalString( oreature, "TARGET" )== sTarget)
- 
-
-			ewTarget = TRUE;
-
-			eak;
-
-		
-
-		i;
-
-		reature = GetNearestObjectToLocation( OJECT_TYPE_CREATURE, GetLocation( oarget ) i )
-
-	
-
-
-	 (bNewTarget)
- 
-
-		arget = T4_GetNotSoRandomTarget();
-
-		tLocalString( OJECT_SELF, "TARGET", sTarget )
-
-		arget = GetObjectByTag( sarget )
-
-		 (!GetIsObjectValid( oarget )
- 
-
-			eakString( "t3", TALKVOLUME_SHOUT );
- 
-			urn;
- 
-		 
-		Target = GetDistanceToObject( oTrget );
- 
-	
-
-	(fToTarget > 0.5)
-  ionMoveToLocation( GeLocation( oTrget ),TRUE );
-
-
-	urn;
+string T4_GetNotSoRandomTarget()
+{
+    return "SomeTargetTag";
 }
 
 
-d T4_Spawn()
-{  
-	ing sTarget = T4_GetNotSoRandomTarget();
- 
-	LocalString(OBJECT_SELF, "TARGET", sTarget);
+void T4_HeartBeat()
+{
+    if (GetIsInCombat())
+        return;
 
+    string sTarget = GetLocalString( OBJECT_SELF, "TARGET" );
+    if (sTarget == "")
+        {
+        SpeakString( "st1", TALKVOLUME_SHOUT );
+        return;
+        }
 
-	ionMoveToLocation(GetLocation(GetObjectByTag(sTarget)), TRUE);
+    object oTarget = GetObjectByTag( sTarget );
+    if (!GetIsObjectValid( oTarget ))
+        {
+        SpeakString( "sT4", TALKVOLUME_SHOUT );
+        return;
+        }
+    if (nAI_Difficulty >= 7)
+    {
+        ApplyBuffs(OBJECT_SELF);
+    }
+
+    float fToTarget = GetDistanceToObject( oTarget );
+    int i = 1;
+    int bNewTarget = FALSE;
+    object oCreature = GetNearestObjectToLocation( OBJECT_TYPE_CREATURE, GetLocation( oTarget ), i );
+    while (GetIsObjectValid( oCreature ))
+    {
+        if (GetLocation( oCreature ) == GetLocation( OBJECT_SELF ))
+            break;
+        if (GetDistanceBetween( oCreature, oTarget ) > fToTarget)
+            break;
+        if (GetDistanceBetween( oCreature, oTarget ) > 5.0)
+            break;
+        if (!SameTeam( oCreature ))
+            break;
+        if (GetIsInCombat( oCreature ))
+            break;
+        if (GetLocalString( oCreature, "TARGET" ) == sTarget)
+        {
+            bNewTarget = TRUE;
+            break;
+        }
+        ++i;
+        oCreature = GetNearestObjectToLocation( OBJECT_TYPE_CREATURE, GetLocation( oTarget ), i );
+    }
+
+    if (bNewTarget)
+    {
+        sTarget = T4_GetNotSoRandomTarget();
+        SetLocalString( OBJECT_SELF, "TARGET", sTarget );
+        oTarget = GetObjectByTag( sTarget );
+        if (!GetIsObjectValid( oTarget ))
+            {
+            SpeakString( "st3", TALKVOLUME_SHOUT );
+            return;
+            }
+        fToTarget = GetDistanceToObject( oTarget );
+    }
+
+    if (fToTarget > 0.5)
+        ActionMoveToLocation( GetLocation( oTarget ), TRUE );
+
+    return;
 }
 
-void T4_UserDefined( in Event ){  
-	tch (Event)
-   
-		e EVENT_ATTACKED:
- 
-			ak;
 
+void T4_Spawn()
+{
+    string sTarget = T4_GetNotSoRandomTarget();
+    SetLocalString(OBJECT_SELF, "TARGET", sTarget);
 
-		e EVENT_DAMAGED:
- 
-			ak;
-
-
-		e EVENT_END_COMBAT_ROUND:
- 
-			ak;
-
-
-		e EVENT_HEARTBEAT:
- 
-			HeartBeat();
- 
-			ak;
-
-
-		e EVENT_PERCEIVE:
- 
-			ak;
-
-
-		e EVENT_SPELL_CAST_AT:
- 
-			ak;
-
-
-		e EVENT_DISTURBED:
- 
-			ak;
-
-
-		e EVENT_DEATH:
- 
-			ak;
-
-
-		e EVENT_SPAWN:
- 
-			Spawn();
- 
-			ak;
- 
-	
-
-	urn;
+    ActionMoveToLocation(GetLocation(GetObjectByTag(sTarget)), TRUE);
 }
 
-void T4_Initialize( sting sColor ){   TeamName( sClor, "Default-" + GetStringLowerCase( sClor ) ;
-} 
+void T4_UserDefined( int Event )
+{
+    switch (Event)
+    {
+        case EVENT_ATTACKED:
+            break;
+
+        case EVENT_DAMAGED:
+            break;
+
+        case EVENT_END_COMBAT_ROUND:
+            break;
+
+        case EVENT_HEARTBEAT:
+            T4_HeartBeat();
+            break;
+
+        case EVENT_PERCEIVE:
+            break;
+
+        case EVENT_SPELL_CAST_AT:
+            break;
+
+        case EVENT_DISTURBED:
+            break;
+
+        case EVENT_DEATH:
+            break;
+
+        case EVENT_SPAWN:
+            T4_Spawn();
+            break;
+    }
+
+    return;
+}
+
+void T4_Initialize( string sColor )
+{
+    SetTeamName( sColor, "Default-" + GetStringLowerCase( sColor ) );
+}
