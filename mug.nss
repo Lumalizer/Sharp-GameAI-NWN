@@ -1,31 +1,6 @@
 #include "NW_I0_GENERIC"
 #include "our_constants"
 
-void T4_DetermineCombatRound(object oIntruder = OBJECT_INVALID, int nAI_Difficulty = 10) {
-	DoHealing();
-	DetermineCombatRound(oIntruder, nAI_Difficulty);
-}
-
-void T4_HeartBeat() {
-	ShoutClosestEnemyLocation(OBJECT_SELF);
-
-	if (GetIsInCombat()) return;
-
-	DoHealing();
-
-	string sTarget = GetLocalString(OBJECT_SELF, "TARGET");
-	if (sTarget == "") return;
-
-	object oTarget = GetObjectByTag(sTarget);
-	if (!GetIsObjectValid(oTarget)) return;
-
-	float fToTarget = SetNewTargetIfNeeded(oTarget, sTarget, OBJECT_SELF);
-
-	if (fToTarget > 0.5) ActionMoveToLocation(GetLocation(oTarget), TRUE);
-
-	return;
-}
-
 // return the health for one of the teams
 int T4_GetHealthTeam(int ourTeam, object oMe = OBJECT_SELF) {
 	// check for which color dependent on the team
@@ -45,14 +20,6 @@ int T4_GetHealthTeam(int ourTeam, object oMe = OBJECT_SELF) {
 	total = total + GetHealth(GetObjectByTag("NPC_" + color + "_7"));
 
 	return total;
-}
-
-void T4_Spawn() {
-	string sTarget = GetNotSoRandomTarget(OBJECT_SELF);
-	string sMessage = "Going to: " + sTarget;
-	SpeakString(sMessage, TALKVOLUME_SHOUT);
-	SetLocalString(OBJECT_SELF, "TARGET", sTarget);
-	ActionMoveToLocation(GetLocation(GetObjectByTag(sTarget)), TRUE);
 }
 
 int T4_GetDifferenceTeamHealth() {
