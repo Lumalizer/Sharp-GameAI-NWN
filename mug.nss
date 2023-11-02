@@ -148,12 +148,12 @@ string T4_GetBestStrategy() {
 	if (T4_GetDifferenceTeamHealth() < -30) {
 		return "DEFENSE";
 	} else if (GetDistanceBetween(GetObjectByTag("NPC_" + MyColor(OBJECT_SELF) + "_7"),
-								  GetObjectByTag("NPC_" + MyColor(OBJECT_SELF) + "_5")) > 20) {
+								  GetObjectByTag("NPC_" + MyColor(OBJECT_SELF) + "_5")) > 20.0) {
 		// if distance between left wizard and left fighter is large (left fighter died), then
 		// defend if health of team is low
 		return "DEFENSE";
 	} else if (GetDistanceBetween(GetObjectByTag("NPC_" + MyColor(OBJECT_SELF) + "_1"),
-								  GetObjectByTag("NPC_" + MyColor(OBJECT_SELF) + "_3")) > 20) {
+								  GetObjectByTag("NPC_" + MyColor(OBJECT_SELF) + "_3")) > 20.0) {
 		// if distance between right wizard and right fighter is large (right fighter died), then
 		// defend if health of team is low
 		return "DEFENSE";
@@ -162,12 +162,13 @@ string T4_GetBestStrategy() {
 	// check for other strategies, such as offense, doubler, etc.
 	if (T4_GetDifferenceTeamHealth() > 0) {
 		if (GetDistanceBetween(GetObjectByTag("NPC_" + MyColor(OBJECT_SELF) + "_7"),
-							   GetObjectByTag("NPC_" + MyColor(OBJECT_SELF) + "_5")) < 20) {
+							   GetObjectByTag("NPC_" + MyColor(OBJECT_SELF) + "_5")) < 20.0) {
 			// if left wizard and left fighter are close to each other, and enough health, then
 			// attack
 			return "OFFENSE";
 		} else if (GetDistanceBetween(GetObjectByTag("NPC_" + MyColor(OBJECT_SELF) + "_1"),
-									  GetObjectByTag("NPC_" + MyColor(OBJECT_SELF) + "_3")) < 20) {
+									  GetObjectByTag("NPC_" + MyColor(OBJECT_SELF) + "_3")) <
+				   20.0) {
 			// if right wizard and right fighter are close to each other, and enough health, then
 			// attack
 			return "OFFENSE";
