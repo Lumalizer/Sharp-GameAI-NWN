@@ -11,7 +11,7 @@ void T2_DetermineCombatRound(object oIntruder = OBJECT_INVALID, int nAI_Difficul
 
 // Called every heartbeat (i.e., every six seconds).
 void T2_HeartBeat() {
-	ShoutClosestEnemyLocation(OBJECT_SELF);
+	// ShoutClosestEnemyLocation(OBJECT_SELF);
 
 	if (GetIsInCombat()) return;
 
@@ -23,8 +23,7 @@ void T2_HeartBeat() {
 	object oTarget = GetObjectByTag(sTarget);
 	if (!GetIsObjectValid(oTarget)) return;
 
-	float fToTarget = SetNewTargetIfNeeded(oTarget, sTarget, OBJECT_SELF);
-
+	float fToTarget = SetNewTargetIfNeeded(oTarget, sTarget, OBJECT_SELF, "smart");
 	if (fToTarget > 0.5) ActionMoveToLocation(GetLocation(oTarget), TRUE);
 
 	return;
@@ -32,9 +31,9 @@ void T2_HeartBeat() {
 
 // Called when the NPC is spawned.
 void T2_Spawn() {
-	string sTarget = GetNotSoRandomTarget(OBJECT_SELF);
-	string sMessage = "Going to: " + sTarget;
-	SpeakString(sMessage, TALKVOLUME_SHOUT);
+	string sTarget = GetSmartAltar(OBJECT_SELF);
+	// string sMessage = "Going to: " + sTarget;
+	// SpeakString(sMessage, TALKVOLUME_SHOUT);
 	SetLocalString(OBJECT_SELF, "TARGET", sTarget);
 	ActionMoveToLocation(GetLocation(GetObjectByTag(sTarget)), TRUE);
 }
