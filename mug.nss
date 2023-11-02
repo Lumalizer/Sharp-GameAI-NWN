@@ -47,6 +47,14 @@ int T4_GetHealthTeam(int ourTeam, object oMe = OBJECT_SELF) {
 	return total;
 }
 
+void T4_Spawn() {
+	string sTarget = GetNotSoRandomTarget(OBJECT_SELF);
+	string sMessage = "Going to: " + sTarget;
+	SpeakString(sMessage, TALKVOLUME_SHOUT);
+	SetLocalString(OBJECT_SELF, "TARGET", sTarget);
+	ActionMoveToLocation(GetLocation(GetObjectByTag(sTarget)), TRUE);
+}
+
 int T4_GetDifferenceTeamHealth() {
 	int ourhealth = T4_GetHealthTeam(TRUE, OBJECT_SELF);
 	int enemyhealth = T4_GetHealthTeam(FALSE, OBJECT_SELF);
@@ -136,24 +144,24 @@ string T4_GetAttackPosition(object oMe = OBJECT_SELF) {
 	return sTarget;
 }
 
-string T4_GetDefensivePosition(object oMe = OBJECT_SELF) {
+string T4_GetDefensivePosition(object oCreature = OBJECT_SELF) {
 	// set the target based on what NPC
-	string sTarget = "WP_ALTAR_" + MyColor(oMe) + "_";
+	string sTarget = "WP_ALTAR_" + MyColor(oCreature) + "_";
 
-	if (IsMaster(oMe))
-		sTarget = "WP_CENTRE_" + MyColor(oMe) + "_2";
-	else if (IsWizardRight(oMe))
-		sTarget = sTarget + "1";
-	else if (IsWizardLeft(oMe))
-		sTarget = sTarget + "2";
-	else if (IsClericRight(oMe))
-		sTarget = sTarget + "1E";
-	else if (IsClericLeft(oMe))
-		sTarget = sTarget + "2E";
-	else if (IsFighterRight(oMe))
-		sTarget = sTarget + "1C";
-	else if (IsFighterLeft(oMe))
-		sTarget = sTarget + "2C";
+	if (IsMaster(oCreature))
+		sTarget = "WP_CENTRE_" + MyColor(oCreature) + "_2";
+	else if (IsWizardRight(oCreature))
+		sTarget = sTarget + "ALTAR_BLUE_1";
+	else if (IsWizardLeft(oCreature))
+		sTarget = sTarget + "ALTAR_BLUE_2";
+	else if (IsClericRight(oCreature))
+		sTarget = sTarget + "ALTAR_RED_1";
+	else if (IsClericLeft(oCreature))
+		sTarget = sTarget + "ALTAR_RED_2";
+	else if (IsFighterRight(oCreature))
+		sTarget = sTarget + "ALTAR_RED_2";
+	else if (IsFighterLeft(oCreature))
+		sTarget = sTarget + "ALTAR_RED_1";
 
 	return sTarget;
 }
