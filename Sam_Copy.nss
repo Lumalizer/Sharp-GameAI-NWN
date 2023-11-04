@@ -23,7 +23,7 @@ void T3_HeartBeat() {
 	object oTarget = GetObjectByTag(sTarget);
 	if (!GetIsObjectValid(oTarget)) return;
 
-	float fToTarget = SetNewTargetIfNeeded(oTarget, sTarget, OBJECT_SELF, "strategic");
+	float fToTarget = SetNewTargetIfNeeded(sTarget, OBJECT_SELF, "strategic");
 
 	if (fToTarget > 0.5) ActionMoveToLocation(GetLocation(oTarget), TRUE);
 
