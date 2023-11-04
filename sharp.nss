@@ -7,6 +7,10 @@
 void T2_DetermineCombatRound(object oIntruder = OBJECT_INVALID, int nAI_Difficulty = 10) {
 	DoHealing();
 	DetermineCombatRound(oIntruder, nAI_Difficulty);
+	string sTarget = GetLocalString(OBJECT_SELF, "TARGET");
+	object oTarget = GetObjectByTag(sTarget);
+	float fToTarget = GetDistanceToObject(oTarget);
+	if (fToTarget > 0.5) ActionMoveToLocation(GetLocation(oTarget), TRUE);
 }
 
 // Called every heartbeat (i.e., every six seconds).
@@ -14,18 +18,17 @@ void T2_HeartBeat() {
 	// ShoutClosestEnemyLocation(OBJECT_SELF);
 
 	if (GetIsInCombat()) return;
-
 	DoHealing();
 
 	string sTarget = GetLocalString(OBJECT_SELF, "TARGET");
+	sTarget = SetNewTargetIfNeeded(sTarget, OBJECT_SELF, "smart");
 	if (sTarget == "") return;
 
 	object oTarget = GetObjectByTag(sTarget);
 	if (!GetIsObjectValid(oTarget)) return;
 
-	float fToTarget = SetNewTargetIfNeeded(sTarget, OBJECT_SELF, "smart");
+	float fToTarget = GetDistanceToObject(oTarget);
 	if (fToTarget > 0.5) ActionMoveToLocation(GetLocation(oTarget), TRUE);
-
 	return;
 }
 

@@ -344,12 +344,9 @@ int DetermineNeedNewTarget(string sTarget, object self) {
 }
 
 // sets a new target, if needed, and returns the distance to the target
-float SetNewTargetIfNeeded(string sTarget, object self, string method = "random") {
-	object oTarget = GetObjectByTag(sTarget);
-	// if the new target is not valid, then choose another new target
-	int j = 0;
-	while (DetermineNeedNewTarget(sTarget, self)) {
-		++j;
+string SetNewTargetIfNeeded(string sTarget, object self, string method = "random") {
+	// if the new target is not valid, then choose a new target
+	if (DetermineNeedNewTarget(sTarget, self)) {
 		if (method == "random")
 			sTarget = GetNotSoRandomTarget(self);
 		else if (method == "strategic")
@@ -357,12 +354,8 @@ float SetNewTargetIfNeeded(string sTarget, object self, string method = "random"
 		else if (method == "smart")
 			sTarget = GetSmartAltar(self);
 
-		if (j > 5) break;
-	}
-
-	if (j > 0) {
 		SetLocalString(self, "TARGET", sTarget);
-		oTarget = GetObjectByTag(sTarget);
+
 		if (method != "smart") {
 			float locationThreat = GetLocationThreatLevel(sTarget, self);
 			string sMessage =
@@ -371,6 +364,5 @@ float SetNewTargetIfNeeded(string sTarget, object self, string method = "random"
 		}
 	}
 
-	if (!GetIsObjectValid(oTarget)) return 0.0;
-	return GetDistanceToObject(oTarget);
+	return sTarget;
 }
