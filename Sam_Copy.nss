@@ -18,7 +18,7 @@ void T3_HeartBeat() {
 
 	string sTarget = GetLocalString(OBJECT_SELF, "TARGET");
 	if (sTarget == "") return;
-	SetNewTargetIfNeeded(sTarget, OBJECT_SELF, "smart");
+	SetNewTargetIfNeeded("strategic");
 	sTarget = GetLocalString(OBJECT_SELF, "TARGET");
 
 	object oTarget = GetObjectByTag(sTarget);
@@ -32,7 +32,7 @@ void T3_HeartBeat() {
 
 // Called when the NPC is spawned.
 void T3_Spawn() {
-	string sTarget = ChooseStrategicAltar(OBJECT_SELF);
+	string sTarget = ChooseStrategicAltar();
 	string sMessage = "Going to: " + sTarget;
 	SpeakString(sMessage, TALKVOLUME_SHOUT);
 	SetLocalString(OBJECT_SELF, "TARGET", sTarget);
