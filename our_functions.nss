@@ -231,6 +231,45 @@ string GetSmartAltar() {
 		if (target != "") targetReason = "(unclaimed target)";
 	}
 
+	// Use distance as a factor in finding the best altar
+	if (target == "") {
+		string bestAltar = "";
+		float bestScore = 100000.0;	 // Initialize with a very high score for comparison
+
+		// Calculate a score for each altar where lower is better
+		// Score is calculated as a weighted combination of threat and distance
+		// Adjust the weight according to the gameplay needs (e.g., 10.0 is the threat weight)
+		float scoreC_AL = fThreat_c_AL * 4.0 + distanceC_AL;
+		float scoreC_AR = fThreat_c_AR * 4.0 + distanceC_AR;
+		float scoreF_AL = fThreat_f_AL * 4.0 + distanceF_AL;
+		float scoreF_AR = fThreat_f_AR * 14.0 + distanceF_AR;
+
+		if (scoreC_AL < bestScore) {
+			bestAltar = c_AL;
+			bestScore = scoreC_AL;
+		}
+
+		if (scoreC_AR < bestScore) {
+			bestAltar = c_AR;
+			bestScore = scoreC_AR;
+		}
+
+		if (scoreF_AL < bestScore) {
+			bestAltar = f_AL;
+			bestScore = scoreF_AL;
+		}
+
+		if (scoreF_AR < bestScore) {
+			bestAltar = f_AR;
+			bestScore = scoreF_AR;
+		}
+
+		if (bestAltar != "") {
+			target = bestAltar;
+			targetReason = "(threat and distance score best)";
+		}
+	}
+
 	// random target if all else fails
 	if (target == "") {
 		target = GetNotSoRandomTarget();
