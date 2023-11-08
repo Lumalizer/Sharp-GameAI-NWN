@@ -7,36 +7,24 @@
 void T2_DetermineCombatRound(object oIntruder = OBJECT_INVALID, int nAI_Difficulty = 10) {
 	DoHealing();
 	DetermineCombatRound(oIntruder, nAI_Difficulty);
+	GoToMyTarget();
 }
 
 // Called every heartbeat (i.e., every six seconds).
 void T2_HeartBeat() {
-	ShoutClosestEnemyLocation(OBJECT_SELF);
-
+	// ShoutClosestEnemyLocation(OBJECT_SELF);
 	if (GetIsInCombat()) return;
-
 	DoHealing();
-
-	string sTarget = GetLocalString(OBJECT_SELF, "TARGET");
-	if (sTarget == "") return;
-
-	object oTarget = GetObjectByTag(sTarget);
-	if (!GetIsObjectValid(oTarget)) return;
-
-	float fToTarget = SetNewTargetIfNeeded(oTarget, sTarget, OBJECT_SELF);
-
-	if (fToTarget > 0.5) ActionMoveToLocation(GetLocation(oTarget), TRUE);
-
-	return;
+	SetNewTargetIfNeeded("smart");
+	GoToMyTarget();
+	HandleTelemetry();
 }
 
 // Called when the NPC is spawned.
 void T2_Spawn() {
-	string sTarget = GetNotSoRandomTarget(OBJECT_SELF);
-	string sMessage = "Going to: " + sTarget;
-	SpeakString(sMessage, TALKVOLUME_SHOUT);
-	SetLocalString(OBJECT_SELF, "TARGET", sTarget);
-	ActionMoveToLocation(GetLocation(GetObjectByTag(sTarget)), TRUE);
+	SetNewTargetIfNeeded("smart");
+	GoToMyTarget();
+	HandleTelemetry();
 }
 
 // This function is called when certain events take place, after the standard

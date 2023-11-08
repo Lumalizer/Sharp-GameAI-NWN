@@ -11,20 +11,20 @@ void T3_DetermineCombatRound(object oIntruder = OBJECT_INVALID, int nAI_Difficul
 
 // Called every heartbeat (i.e., every six seconds).
 void T3_HeartBeat() {
-	ShoutClosestEnemyLocation(OBJECT_SELF);
+	// ShoutClosestEnemyLocation(OBJECT_SELF);
 
 	if (GetIsInCombat()) return;
-
 	DoHealing();
 
 	string sTarget = GetLocalString(OBJECT_SELF, "TARGET");
 	if (sTarget == "") return;
+	SetNewTargetIfNeeded("strategic");
+	sTarget = GetLocalString(OBJECT_SELF, "TARGET");
 
 	object oTarget = GetObjectByTag(sTarget);
 	if (!GetIsObjectValid(oTarget)) return;
 
-	float fToTarget = SetNewTargetIfNeeded(oTarget, sTarget, OBJECT_SELF, "strategic");
-
+	float fToTarget = GetDistanceToObject(oTarget);
 	if (fToTarget > 0.5) ActionMoveToLocation(GetLocation(oTarget), TRUE);
 
 	return;
@@ -32,7 +32,7 @@ void T3_HeartBeat() {
 
 // Called when the NPC is spawned.
 void T3_Spawn() {
-	string sTarget = ChooseStrategicAltar(OBJECT_SELF);
+	string sTarget = ChooseStrategicAltar();
 	string sMessage = "Going to: " + sTarget;
 	SpeakString(sMessage, TALKVOLUME_SHOUT);
 	SetLocalString(OBJECT_SELF, "TARGET", sTarget);

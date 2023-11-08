@@ -13,8 +13,8 @@ void ShoutClosestEnemyLocation(object oPC) {
 	}
 }
 
-float GetCreatureThreatLevel(object oCreature, object self) {
-	int isFriendly = SameTeam(oCreature, self);
+float GetCreatureThreatLevel(object oCreature) {
+	int isFriendly = SameTeam(oCreature, OBJECT_SELF);
 	int inCombat = GetIsInCombat(oCreature);
 	int isMaster = IsMaster(oCreature);
 	int isFighter = IsFighter(oCreature);
@@ -25,11 +25,13 @@ float GetCreatureThreatLevel(object oCreature, object self) {
 	if (isFriendly) fThreat *= -1.0;
 	if (inCombat) fThreat *= 1.2;
 	if (!isFriendly && inCombat) fThreat += 0.1;
+	int health = GetHealth(oCreature);
+	fThreat = fThreat * ((health + 1) / 6.0);
 
 	return fThreat;
 }
 
-float GetLocationThreatLevel(string loc, object self) {
+float GetLocationThreatLevel(string loc) {
 	object oLocation = GetObjectByTag(loc);
 	float fThreatLevel = 0.0;
 
@@ -38,29 +40,29 @@ float GetLocationThreatLevel(string loc, object self) {
 	object oCreature = GetNearestObjectToLocation(OBJECT_TYPE_CREATURE, GetLocation(oLocation), i);
 	while (GetIsObjectValid(oCreature)) {
 		float fDistance = GetDistanceBetween(oCreature, oLocation);
-		if (fDistance > 20.0) break;
-		fThreatLevel += GetCreatureThreatLevel(oCreature, self);
+		if (fDistance > 30.0) break;
+		fThreatLevel += GetCreatureThreatLevel(oCreature);
 		++i;
-		if (i > 8) break;
+		if (i > 12) break;
 		oCreature = GetNearestObjectToLocation(OBJECT_TYPE_CREATURE, GetLocation(oLocation), i);
 	}
 
 	return fThreatLevel;
 }
 
-string GetNotSoRandomTarget(object self) {
+string GetNotSoRandomTarget() {
 	// The next line moves to the spawn location of the similar opponent
 	// ActionMoveToLocation( GetLocation( GetObjectByTag( "WP_" + OpponentColor( OBJECT_SELF ) + "_"
 	// + IntToString( GetLocalInt( OBJECT_SELF, "INDEX" ) ) ) ), TRUE );
 
-	if (IsWizardLeft(self))
+	if (IsWizardLeft(OBJECT_SELF))
 		return WpClosestAltarLeft();
-	else if (IsWizardRight(self))
+	else if (IsWizardRight(OBJECT_SELF))
 		return WpClosestAltarRight();
 
 	int iTarget = 0;
 
-	if (IsMaster(self))
+	if (IsMaster(OBJECT_SELF))
 		iTarget = Random(8);
 	else
 		iTarget = Random(10);
@@ -82,20 +84,25 @@ string GetNotSoRandomTarget(object self) {
 }
 
 void DoHealing() {
+	if (TalentHealingSelf()) {
+		SpeakString("I am healing myself.", TALKVOLUME_SHOUT);
+		return;
+	}
 	if (TalentHeal()) {
 		SpeakString("I am healing.", TALKVOLUME_SHOUT);
 		return;
 	}
 }
 
-string GetSmartAltar(object self) {
-	string sMyColor = MyColor(self);
-	string sOpponentColor = OpponentColor(self);
+string GetSmartAltar() {
+	string sMyColor = MyColor(OBJECT_SELF);
+	string sOpponentColor = OpponentColor(OBJECT_SELF);
+	float ourThreat = GetCreatureThreatLevel(OBJECT_SELF);
 
-	int isMaster = IsMaster(self);
-	int isFighter = IsFighter(self);
-	int isCleric = IsCleric(self);
-	int isWizard = IsWizard(self);
+	int isMaster = IsMaster(OBJECT_SELF);
+	int isFighter = IsFighter(OBJECT_SELF);
+	int isCleric = IsCleric(OBJECT_SELF);
+	int isWizard = IsWizard(OBJECT_SELF);
 
 	string c_AL = WpClosestAltarLeft();
 	string c_AR = WpClosestAltarRight();
@@ -109,57 +116,173 @@ string GetSmartAltar(object self) {
 	string claimerF_AR = ClaimerOf(f_AR);
 	string claimerD = ClaimerOf(d);
 
-	float distanceC_AL = GetDistanceBetween(self, GetObjectByTag(c_AL));
-	float distanceC_AR = GetDistanceBetween(self, GetObjectByTag(c_AR));
-	float distanceF_AL = GetDistanceBetween(self, GetObjectByTag(f_AL));
-	float distanceF_AR = GetDistanceBetween(self, GetObjectByTag(f_AR));
-	float distanceD = GetDistanceBetween(self, GetObjectByTag(d));
+	float distanceC_AL = GetDistanceBetween(OBJECT_SELF, GetObjectByTag(c_AL));
+	float distanceC_AR = GetDistanceBetween(OBJECT_SELF, GetObjectByTag(c_AR));
+	float distanceF_AL = GetDistanceBetween(OBJECT_SELF, GetObjectByTag(f_AL));
+	float distanceF_AR = GetDistanceBetween(OBJECT_SELF, GetObjectByTag(f_AR));
+	float distanceD = GetDistanceBetween(OBJECT_SELF, GetObjectByTag(d));
 
-	float fThreat_c_AL = GetLocationThreatLevel(c_AL, self);
-	float fThreat_c_AR = GetLocationThreatLevel(c_AR, self);
-	float fThreat_f_AL = GetLocationThreatLevel(f_AL, self);
-	float fThreat_f_AR = GetLocationThreatLevel(f_AR, self);
-	float fThreat_d = GetLocationThreatLevel(d, self);
+	float fThreat_c_AL = GetLocationThreatLevel(c_AL);
+	float fThreat_c_AR = GetLocationThreatLevel(c_AR);
+	float fThreat_f_AL = GetLocationThreatLevel(f_AL);
+	float fThreat_f_AR = GetLocationThreatLevel(f_AR);
+	float fThreat_d = GetLocationThreatLevel(d);
 
 	string target = "";
 	string targetReason = "";
 
+	// class-specific behavior
 	if (isWizard) {
 		if (distanceC_AL < distanceC_AR && claimerC_AL != sMyColor)
 			target = c_AL;
 		else if (claimerC_AR != sMyColor)
 			target = c_AR;
+		else if (claimerC_AL != sMyColor)
+			target = c_AL;
 
-		if (target != "") targetReason = "Wizard Target: ";
+		if (target != "") targetReason = "(wizard target)";
 
 	} else if (isMaster) {
-		if (claimerD != sMyColor) target = d;
-		if (target != "") targetReason = "Master Target: ";
+		if (claimerD == sOpponentColor) target = d;
+		if (target != "") targetReason = "(master target)";
 	}
 
+	// control close unclaimed altars
 	if (target == "") {
-		if (fThreat_d >= 0.0 && fThreat_d + GetCreatureThreatLevel(self, self) < 0.3)
+		if (claimerD == "" && distanceD < 20.0)
 			target = d;
-		else if (fThreat_c_AL >= 0.0 && fThreat_c_AL + GetCreatureThreatLevel(self, self) < 0.3)
+		else if (claimerC_AL == "" && distanceC_AL < 20.0)
 			target = c_AL;
-		else if (fThreat_c_AR >= 0.0 && fThreat_c_AR + GetCreatureThreatLevel(self, self) < 0.3)
+		else if (claimerC_AR == "" && distanceC_AR < 20.0)
 			target = c_AR;
-		else if (fThreat_f_AL >= 0.0 && fThreat_f_AL + GetCreatureThreatLevel(self, self) < 0.3)
+		else if (claimerF_AL == "" && distanceF_AL < 20.0)
 			target = f_AL;
-		else if (fThreat_f_AR >= 0.0 && fThreat_f_AR + GetCreatureThreatLevel(self, self) < 0.3)
+		else if (claimerF_AR == "" && distanceF_AR < 20.0)
 			target = f_AR;
 
-		if (target != "") targetReason = "Threat Target: ";
+		if (target != "") targetReason = "(unclaimed close target)";
 	}
 
+	// threat level based decisions
 	if (target == "") {
-		target = GetNotSoRandomTarget(self);
-		targetReason = "Random Target: ";
+		int threat_decision_d = (fThreat_d >= 0.0 && fThreat_d + ourThreat < 1.3);
+		int threat_decision_c_AL = (fThreat_c_AL > 0.0 && fThreat_c_AL + ourThreat < 0.4);
+		int threat_decision_c_AR = (fThreat_c_AR > 0.0 && fThreat_c_AR + ourThreat < 0.4);
+		int threat_decision_f_AL = (fThreat_f_AL > 0.0 && fThreat_f_AL + ourThreat < 0.3);
+		int threat_decision_f_AR = (fThreat_f_AR > 0.0 && fThreat_f_AR + ourThreat < 0.3);
+
+		if (threat_decision_d)
+			target = d;
+		else if (threat_decision_c_AL && threat_decision_c_AR) {
+			if (distanceC_AL < distanceC_AR)
+				target = c_AL;
+			else
+				target = c_AR;
+		} else if (threat_decision_c_AL)
+			target = c_AL;
+		else if (threat_decision_c_AR)
+			target = c_AR;
+		else if (threat_decision_f_AL && threat_decision_f_AR) {
+			if (distanceF_AL < distanceF_AR)
+				target = f_AL;
+			else
+				target = f_AR;
+		} else if (threat_decision_f_AL)
+			target = f_AL;
+		else if (threat_decision_f_AR)
+			target = f_AR;
+
+		if (target != "") targetReason = "(threat target)";
 	}
 
-	float locationThreat = GetLocationThreatLevel(target, self);
-	string sMessage = targetReason + target + " Threat score:" + FloatToString(locationThreat);
-	SpeakString(sMessage, TALKVOLUME_SHOUT);
+	// control unclaimed altars
+	if (target == "") {
+		if (claimerD == "" && distanceD < 20.0)
+			target = d;
+		else if (claimerC_AL == "" && distanceC_AL < 20.0)
+			target = c_AL;
+		else if (claimerC_AR == "" && distanceC_AR < 20.0)
+			target = c_AR;
+		else if (claimerF_AL == "" && distanceF_AL < 20.0)
+			target = f_AL;
+		else if (claimerF_AR == "" && distanceF_AR < 20.0)
+			target = f_AR;
+		else if (claimerD == "" && distanceD < 35.0)
+			target = d;
+		else if (claimerC_AL == "" && distanceC_AL < 35.0)
+			target = c_AL;
+		else if (claimerC_AR == "" && distanceC_AR < 35.0)
+			target = c_AR;
+		else if (claimerF_AL == "" && distanceF_AL < 35.0)
+			target = f_AL;
+		else if (claimerF_AR == "" && distanceF_AR < 35.0)
+			target = f_AR;
+		else if (claimerD == "" && distanceD < 65.0)
+			target = d;
+		else if (claimerC_AL == "" && distanceC_AL < 65.0)
+			target = c_AL;
+		else if (claimerC_AR == "" && distanceC_AR < 65.0)
+			target = c_AR;
+		else if (claimerF_AL == "" && distanceF_AL < 65.0)
+			target = f_AL;
+		else if (claimerF_AR == "" && distanceF_AR < 65.0)
+			target = f_AR;
+
+		if (target != "") targetReason = "(unclaimed target)";
+	}
+
+	// Use distance as a factor in finding the best altar
+	if (target == "") {
+		string bestAltar = "";
+		float bestScore = 100000.0;	 // Initialize with a very high score for comparison
+
+		// Calculate a score for each altar where lower is better
+		// Score is calculated as a weighted combination of threat and distance
+		// Adjust the weight according to the gameplay needs (e.g., 10.0 is the threat weight)
+		float scoreC_AL = fThreat_c_AL * 4.0 + distanceC_AL;
+		float scoreC_AR = fThreat_c_AR * 4.0 + distanceC_AR;
+		float scoreF_AL = fThreat_f_AL * 4.0 + distanceF_AL;
+		float scoreF_AR = fThreat_f_AR * 14.0 + distanceF_AR;
+
+		if (scoreC_AL < bestScore) {
+			bestAltar = c_AL;
+			bestScore = scoreC_AL;
+		}
+
+		if (scoreC_AR < bestScore) {
+			bestAltar = c_AR;
+			bestScore = scoreC_AR;
+		}
+
+		if (scoreF_AL < bestScore) {
+			bestAltar = f_AL;
+			bestScore = scoreF_AL;
+		}
+
+		if (scoreF_AR < bestScore) {
+			bestAltar = f_AR;
+			bestScore = scoreF_AR;
+		}
+
+		if (bestAltar != "") {
+			target = bestAltar;
+			targetReason = "(threat and distance score best)";
+		}
+	}
+
+	// random target if all else fails
+	if (target == "") {
+		target = GetNotSoRandomTarget();
+		targetReason = "(random Target) ";
+	}
+
+	float locationThreat = GetLocationThreatLevel(target);
+	float locationDistance = GetDistanceBetween(OBJECT_SELF, GetObjectByTag(target));
+	string sMessage = target + ": " + targetReason +
+					  " Threat score:" + FloatToString(locationThreat) +
+					  " Distance:" + FloatToString(locationDistance);
+
+	SetLocalString(OBJECT_SELF, "targetchoiceinfo", sMessage);
 
 	return target;
 }
@@ -182,9 +305,9 @@ string GetTargetAltar(string condition) {
 		return "";
 }
 
-string ChooseStrategicAltar(object self) {
-	string sMyColor = MyColor(self);
-	string sOpponentColor = OpponentColor(self);
+string ChooseStrategicAltar() {
+	string sMyColor = MyColor(OBJECT_SELF);
+	string sOpponentColor = OpponentColor(OBJECT_SELF);
 
 	string emptyAltar = GetTargetAltar("");
 	if (emptyAltar != "") return emptyAltar;
@@ -201,7 +324,7 @@ string ChooseStrategicAltar(object self) {
 		targetAltar = attackAltar;
 		mode = "attack";
 	} else
-		return GetNotSoRandomTarget(self);
+		return GetNotSoRandomTarget();
 
 	object oAltar = GetObjectByTag(targetAltar);
 	object oEnemy = GetNearestCreature(1, 1, oAltar, 1, -1, 2, 1);
@@ -215,26 +338,36 @@ string ChooseStrategicAltar(object self) {
 		if (!GetIsObjectValid(oEnemy) || GetDistanceBetween(oAltar, oEnemy) > 5.0)
 			return targetAltar;
 	}
-	return GetNotSoRandomTarget(self);
+	return GetNotSoRandomTarget();
 }
 
-int DetermineNeedNewTarget(object oTarget, string sTarget, object self) {
+int DetermineNeedNewTarget() {
+	string sTarget = GetLocalString(OBJECT_SELF, "TARGET");
+	if (sTarget == "") {
+		SetLocalString(OBJECT_SELF, "targetchangereason", "(no target)");
+		return TRUE;
+	}
+
+	object oTarget = GetObjectByTag(sTarget);
 	object oCreature = GetNearestObjectToLocation(OBJECT_TYPE_CREATURE, GetLocation(oTarget));
 	float fToTarget = GetDistanceToObject(oTarget);
-	int underOurControl = ClaimerOf(sTarget) == MyColor(self);
+	int underOurControl = ClaimerOf(sTarget) == MyColor(OBJECT_SELF);
 
 	// if I am the closest to the target, then do not choose a new target
-	if (oCreature == self) return FALSE;
+	if (oCreature == OBJECT_SELF) return FALSE;
 
-	// if target threat is low, then choose a new target
-	if (!GetIsInCombat(oCreature) && GetLocationThreatLevel(sTarget, self) < -2.0) {
-		SpeakString("Changing target (high allied strength): " + sTarget, TALKVOLUME_SHOUT);
-		return TRUE;
-	};
+	// // if target threat is low, then choose a new target
+	// if (!GetIsInCombat(oCreature) && GetLocationThreatLevel(sTarget, OBJECT_SELF) < -2.0) {
+	// 	if (Random(2) == 0) {
+	// 		SpeakString("Changing target (high allied strength): " + sTarget, TALKVOLUME_SHOUT);
+	// 		return TRUE;
+	// 	}
+	// };
 
 	// if enemy strength is too high, then choose a new target
-	if (GetLocationThreatLevel(sTarget, self) > 2.5) {
-		SpeakString("Changing target (high enemy strength): " + sTarget, TALKVOLUME_SHOUT);
+	if (GetLocationThreatLevel(sTarget) > 2.5) {
+		SetLocalString(OBJECT_SELF, "targetchangereason", "(high enemy strength)");
+		// SpeakString("Changing target (high enemy strength): " + sTarget, TALKVOLUME_SHOUT);
 		return TRUE;
 	};
 
@@ -243,12 +376,13 @@ int DetermineNeedNewTarget(object oTarget, string sTarget, object self) {
 	// has the same target, then choose a new target.
 	int i = 1;
 	while (GetIsObjectValid(oCreature)) {
-		if (GetLocation(oCreature) == GetLocation(self)) break;
+		if (GetLocation(oCreature) == GetLocation(OBJECT_SELF)) break;
 		if (GetDistanceBetween(oCreature, oTarget) > fToTarget) break;
 		if (GetDistanceBetween(oCreature, oTarget) > 5.0) break;
 		if (!SameTeam(oCreature)) break;
 		if (GetIsInCombat(oCreature)) break;
 		if (GetLocalString(oCreature, "TARGET") == sTarget) {
+			SetLocalString(OBJECT_SELF, "targetchangereason", "(friendly has control)");
 			return TRUE;
 			break;
 		}
@@ -259,29 +393,54 @@ int DetermineNeedNewTarget(object oTarget, string sTarget, object self) {
 }
 
 // sets a new target, if needed, and returns the distance to the target
-float SetNewTargetIfNeeded(object oTarget, string sTarget, object self, string method = "random") {
-	// if the new target is not valid, then choose another new target
-	int j = 0;
-	while (DetermineNeedNewTarget(oTarget, sTarget, self)) {
-		++j;
-		if (method == "random")
-			sTarget = GetNotSoRandomTarget(self);
-		else if (method == "strategic")
-			sTarget = ChooseStrategicAltar(self);
-		else if (method == "smart")
-			sTarget = GetSmartAltar(self);
+int SetNewTargetIfNeeded(string method = "random") {
+	if (!DetermineNeedNewTarget()) return FALSE;
 
-		SetLocalString(self, "TARGET", sTarget);
-		oTarget = GetObjectByTag(sTarget);
-		if (j > 5) break;
-	}
+	string sTarget = "";
 
-	if (j > 0) {
-		float locationThreat = GetLocationThreatLevel(sTarget, self);
+	if (method == "random")
+		sTarget = GetNotSoRandomTarget();
+	else if (method == "strategic")
+		sTarget = ChooseStrategicAltar();
+	else if (method == "smart")
+		sTarget = GetSmartAltar();
+
+	if (method != "smart") {
+		float locationThreat = GetLocationThreatLevel(sTarget);
 		string sMessage = "Going to: " + sTarget + " Threat score:" + FloatToString(locationThreat);
 		SpeakString(sMessage, TALKVOLUME_SHOUT);
 	}
 
-	if (!GetIsObjectValid(oTarget)) return 0.0;
-	return GetDistanceToObject(oTarget);
+	// check if the new target is the same as the old target
+	string pTarget = GetLocalString(OBJECT_SELF, "TARGET");
+	if (pTarget == sTarget) return FALSE;
+
+	SetLocalString(OBJECT_SELF, "oldtarget", pTarget);
+	SetLocalString(OBJECT_SELF, "TARGET", sTarget);
+
+	return TRUE;
+}
+
+int GoToMyTarget() {
+	string sTarget = GetLocalString(OBJECT_SELF, "TARGET");
+	if (sTarget == "") return FALSE;
+	object oTarget = GetObjectByTag(sTarget);
+	if (!GetIsObjectValid(oTarget)) return FALSE;
+	float fToTarget = GetDistanceToObject(oTarget);
+	if (fToTarget > 0.5) ActionMoveToLocation(GetLocation(oTarget), TRUE);
+	return fToTarget > 0.0;
+}
+
+void HandleTelemetry(int enabled = TRUE) {
+	if (!enabled) return;
+	string targetchoiceinfo = GetLocalString(OBJECT_SELF, "targetchoiceinfo");
+	string targetchangereason = GetLocalString(OBJECT_SELF, "targetchangereason");
+	string oldtarget = GetLocalString(OBJECT_SELF, "oldtarget");
+
+	if (targetchangereason != "") {
+		string sMessage = "Target Changed from: " + oldtarget + " " + targetchangereason +
+						  " To: " + targetchoiceinfo;
+		SpeakString(sMessage, TALKVOLUME_SHOUT);
+		SetLocalString(OBJECT_SELF, "targetchangereason", "");
+	}
 }
