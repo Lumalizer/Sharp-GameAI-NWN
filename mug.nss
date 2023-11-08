@@ -9,7 +9,6 @@ int T4_GetHealthTeam(int ourTeam, object oMe = OBJECT_SELF) {
 		color = OpponentColor(oMe);
 	}
 
-	// now compute the total health for the entire team
 	int total = 0;
 	total = total + GetHealth(GetObjectByTag("NPC_" + color + "_1"));
 	total = total + GetHealth(GetObjectByTag("NPC_" + color + "_2"));
@@ -139,8 +138,6 @@ string T4_GetDoublerPosition() {
 }
 
 string T4_GetBestStrategy() {
-	// first check whether to use an interesting strategy here
-	// if we are ahead by a lot, keep defending
 	if (GetScore(MyColor(OBJECT_SELF)) > 2 * GetScore(OpponentColor(OBJECT_SELF))) {
 		return "DEFENSE";
 	}
