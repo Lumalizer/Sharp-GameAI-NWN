@@ -159,33 +159,24 @@ string T4_GetBestStrategy() {
 	return "DEFENSE";
 }
 
-// Called every time that the AI needs to take a combat decision. The default is
-// a call to the NWN DetermineCombatRound.
 void T4_DetermineCombatRound(object oIntruder = OBJECT_INVALID, int nAI_Difficulty = 10) {
 	DetermineCombatRound(oIntruder, nAI_Difficulty);
 }
 
-// Called every heartbeat (i.e., every six seconds).
 void T4_HeartBeat() {
-	// if in combat, let it do combat stuff automatically, anything we want to do differently, do so
-	// before
 	if (GetIsInCombat()) return;
 
-	// on the turn of the first NPC (right wizard), check which strategy to employ
 	if (IsWizardRight(OBJECT_SELF)) {
 		string strat = T4_GetBestStrategy();
 		T4_SetStrategy(strat, OBJECT_SELF);
 	}
 
-	// now, do the behavior as defined for offensive and defensive play
 	if (T4_IsOffensive(OBJECT_SELF)) {
-		// TODO: define offensive behavior here
 	}
 	if (T4_IsDefensive(OBJECT_SELF)) {
-		// get the normal defensive position
 		string sTarget = T4_GetDefensivePosition(OBJECT_SELF);
 		SpeakString("My target is: " + sTarget, TALKVOLUME_SHOUT);
-		// now set this as the current target
+
 		SetLocalString(OBJECT_SELF, "TARGET", sTarget);
 	}
 
