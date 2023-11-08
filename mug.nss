@@ -128,10 +128,7 @@ string T4_GetDefensivePosition(object oCreature = OBJECT_SELF) {
 	return sTarget;
 }
 
-string T4_GetDoublerPosition() {
-	// TODO: implement this method
-	return "";
-}
+string T4_GetDoublerPosition() { return ""; }
 
 string T4_GetBestStrategy() {
 	if (GetScore(MyColor(OBJECT_SELF)) > 2 * GetScore(OpponentColor(OBJECT_SELF))) {
@@ -142,33 +139,23 @@ string T4_GetBestStrategy() {
 		return "DEFENSE";
 	} else if (GetDistanceBetween(GetObjectByTag("NPC_" + MyColor(OBJECT_SELF) + "_7"),
 								  GetObjectByTag("NPC_" + MyColor(OBJECT_SELF) + "_5")) > 20.0) {
-		// if distance between left wizard and left fighter is large (left fighter died), then
-		// defend if health of team is low
 		return "DEFENSE";
 	} else if (GetDistanceBetween(GetObjectByTag("NPC_" + MyColor(OBJECT_SELF) + "_1"),
 								  GetObjectByTag("NPC_" + MyColor(OBJECT_SELF) + "_3")) > 20.0) {
-		// if distance between right wizard and right fighter is large (right fighter died), then
-		// defend if health of team is low
 		return "DEFENSE";
 	}
 
-	// check for other strategies, such as offense, doubler, etc.
 	if (T4_GetDifferenceTeamHealth() > 0) {
 		if (GetDistanceBetween(GetObjectByTag("NPC_" + MyColor(OBJECT_SELF) + "_7"),
 							   GetObjectByTag("NPC_" + MyColor(OBJECT_SELF) + "_5")) < 20.0) {
-			// if left wizard and left fighter are close to each other, and enough health, then
-			// attack
 			return "OFFENSE";
 		} else if (GetDistanceBetween(GetObjectByTag("NPC_" + MyColor(OBJECT_SELF) + "_1"),
 									  GetObjectByTag("NPC_" + MyColor(OBJECT_SELF) + "_3")) <
 				   20.0) {
-			// if right wizard and right fighter are close to each other, and enough health, then
-			// attack
 			return "OFFENSE";
 		}
 	}
 
-	// otherwise return defense
 	return "DEFENSE";
 }
 
@@ -202,7 +189,6 @@ void T4_HeartBeat() {
 		SetLocalString(OBJECT_SELF, "TARGET", sTarget);
 	}
 
-	// just some checks on whether the target is valid
 	string sTarget = GetLocalString(OBJECT_SELF, "TARGET");
 	if (sTarget == "") return;
 
@@ -215,72 +201,51 @@ void T4_HeartBeat() {
 	return;
 }
 
-// Called when the NPC is spawned.
 void T4_Spawn() {
-	// on the first spawn
 	if (GetLocalString(MyPortal(GetObjectByTag(TagMaster(OBJECT_SELF))), "CURRENT_STRATEGY") == "")
-		// set our strategy to defensive
 		SetLocalString(MyPortal(GetObjectByTag(TagMaster(OBJECT_SELF))), "CURRENT_STRATEGY",
 					   "DEFENSIVE");
 
-	// TODO: if melee character, drop ranged weapon
-
-	// set target depending on current strategy and move there
 	string sTarget = "";
 
 	if (T4_IsOffensive(OBJECT_SELF)) {
-		// define offensive behavior here
 	}
 	if (T4_IsDefensive(OBJECT_SELF)) {
-		// define defensive behavior here
 		sTarget = T4_GetDefensivePosition(OBJECT_SELF);
 		SpeakString("setting defensive target", TALKVOLUME_SHOUT);
 	}
 
-	// now move to the location given by the strategy
 	SetLocalString(OBJECT_SELF, "TARGET", sTarget);
 	ActionMoveToLocation(GetLocation(GetObjectByTag(sTarget)), TRUE);
 }
 
-// This function is called when certain events take place, after the standard
-// NWN handling of these events has been performed.
 void T4_UserDefined(int Event) {
 	switch (Event) {
-		// The NPC has just been attacked.
 		case EVENT_ATTACKED:
-			// TODO: perhaps call for nearby units to assist in combat?
 			break;
 
-		// The NPC was damaged.
 		case EVENT_DAMAGED:
 			break;
 
-		// At the end of one round of combat.
 		case EVENT_END_COMBAT_ROUND:
 			break;
 
-		// Every heartbeat (i.e., every six seconds).
 		case EVENT_HEARTBEAT:
 			T4_HeartBeat();
 			break;
 
-		// Whenever the NPC perceives a new creature.
 		case EVENT_PERCEIVE:
 			break;
 
-		// When a spell is cast at the NPC.
 		case EVENT_SPELL_CAST_AT:
 			break;
 
-		// Whenever the NPC's inventory is disturbed.
 		case EVENT_DISTURBED:
 			break;
 
-		// Whenever the NPC dies.
 		case EVENT_DEATH:
 			break;
 
-		// When the NPC has just been spawned.
 		case EVENT_SPAWN:
 			T4_Spawn();
 			break;
@@ -289,7 +254,6 @@ void T4_UserDefined(int Event) {
 	return;
 }
 
-// Called when the fight starts, just before the initial spawning.
 void T4_Initialize(string sColor) {
 	SetTeamName(sColor, "offense/defense-" + GetStringLowerCase(sColor));
 }
