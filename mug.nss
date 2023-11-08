@@ -1,9 +1,7 @@
 #include "NW_I0_GENERIC"
 #include "our_constants"
 
-// return the health for one of the teams
 int T4_GetHealthTeam(int ourTeam, object oMe = OBJECT_SELF) {
-	// check for which color dependent on the team
 	string color = MyColor(oMe);
 	if (!ourTeam) {
 		color = OpponentColor(oMe);
@@ -28,7 +26,6 @@ int T4_GetDifferenceTeamHealth() {
 	return ourhealth - enemyhealth;
 }
 
-// get the points earned per turn for the team
 int T4_PointsPerTurn(int ourTeam = TRUE, object oMe = OBJECT_SELF) {
 	int PPT = 0;
 	string sColor = MyColor(oMe);
@@ -46,7 +43,6 @@ int T4_PointsPerTurn(int ourTeam = TRUE, object oMe = OBJECT_SELF) {
 	return PPT;
 }
 
-// return how much points we are earning each turn in comparison to the other team
 int T4_GetPointAdvantage() {
 	int ourPPT = T4_PointsPerTurn(TRUE, OBJECT_SELF);
 	int enemyPPT = T4_PointsPerTurn(FALSE, OBJECT_SELF);
@@ -68,7 +64,6 @@ int T4_IsOffensive(object oMe = OBJECT_SELF) {
 	return FALSE;
 }
 
-// check if we are currently employing a doubler strategy
 int T4_IsDoubler(object oMe = OBJECT_SELF) {
 	if (GetLocalString(MyPortal(GetObjectByTag(TagMaster(oMe))), "CURRENT_STRATEGY") == "DOUBLER")
 		return TRUE;
@@ -79,17 +74,13 @@ void T4_SetStrategy(string strat, object oMe = OBJECT_SELF) {
 	SetLocalString(MyPortal(GetObjectByTag(TagMaster(oMe))), "CURRENT_STRATEGY", strat);
 }
 
-// set our current strategy to defensive
 void T4_SetDefensive(object oMe = OBJECT_SELF) { T4_SetStrategy("DEFENSIVE", oMe); }
 
-// set our current strategy to offensive
 void T4_SetOffensive(object oMe = OBJECT_SELF) { T4_SetStrategy("OFFENSIVE", oMe); }
 
-// set our current strategy to doubler
 void T4_SetDoubler(object oMe = OBJECT_SELF) { T4_SetStrategy("DOUBLER", oMe); }
 
 string T4_GetAttackPosition(object oMe = OBJECT_SELF) {
-	// set the target based on what NPC
 	string sTarget = "WP_ALTAR_" + OpponentColor(oMe) + "_";
 
 	if (IsMaster(oMe))
@@ -101,33 +92,38 @@ string T4_GetAttackPosition(object oMe = OBJECT_SELF) {
 	else if (IsClericRight(oMe))
 		sTarget = sTarget + "1B";
 	else if (IsClericLeft(oMe))
-		sTarget = sTarget + "2B";  // B instead of E
+		sTarget = sTarget + "2B";
 	else if (IsFighterRight(oMe))
 		sTarget = sTarget + "1A";
 	else if (IsFighterLeft(oMe))
-		sTarget = sTarget + "2A";  // A instead of C
+		sTarget = sTarget + "2A";
 
 	return sTarget;
 }
 
 string T4_GetDefensivePosition(object oCreature = OBJECT_SELF) {
-	// set the target based on what NPC
+	string c_AL = WpClosestAltarLeft();
+	string c_AR = WpClosestAltarRight();
+	string f_AL = WpFurthestAltarLeft();
+	string f_AR = WpFurthestAltarRight();
+	string d = WpDoubler();
+
 	string sTarget = "WP_ALTAR_" + MyColor(oCreature) + "_";
 
 	if (IsMaster(oCreature))
-		sTarget = "WP_CENTRE_" + MyColor(oCreature) + "_2";
+		sTarget = d;
 	else if (IsWizardRight(oCreature))
-		sTarget = sTarget + "ALTAR_BLUE_1";
+		sTarget = sTarget + c_AL;
 	else if (IsWizardLeft(oCreature))
-		sTarget = sTarget + "ALTAR_BLUE_2";
+		sTarget = sTarget + c_AL;
 	else if (IsClericRight(oCreature))
-		sTarget = sTarget + "ALTAR_RED_1";
+		sTarget = sTarget + c_AL;
 	else if (IsClericLeft(oCreature))
-		sTarget = sTarget + "ALTAR_RED_2";
+		sTarget = sTarget + c_AL;
 	else if (IsFighterRight(oCreature))
-		sTarget = sTarget + "ALTAR_RED_2";
+		sTarget = sTarget + c_AL;
 	else if (IsFighterLeft(oCreature))
-		sTarget = sTarget + "ALTAR_RED_1";
+		sTarget = sTarget + c_AL;
 
 	return sTarget;
 }
@@ -201,7 +197,7 @@ void T4_HeartBeat() {
 	if (T4_IsDefensive(OBJECT_SELF)) {
 		// get the normal defensive position
 		string sTarget = T4_GetDefensivePosition(OBJECT_SELF);
-		// SpeakString("My target is: " + sTarget, TALKVOLUME_SHOUT);
+		SpeakString("My target is: " + sTarget, TALKVOLUME_SHOUT);
 		// now set this as the current target
 		SetLocalString(OBJECT_SELF, "TARGET", sTarget);
 	}
