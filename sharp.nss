@@ -5,16 +5,17 @@
 // Called every time that the AI needs to take a combat decision. The default is
 // a call to the NWN DetermineCombatRound.
 void T2_DetermineCombatRound(object oIntruder = OBJECT_INVALID, int nAI_Difficulty = 10) {
-	DoHealing();
-	DetermineCombatRound(oIntruder, nAI_Difficulty);
+	EquipCorrectWeapon();
+	ActionDoCommand(DoHealing(TRUE));
+	ActionDoCommand(DetermineCombatRound(oIntruder, nAI_Difficulty));
+	// SetNewTargetIfNeeded("smart");
 	GoToMyTarget();
 }
 
 // Called every heartbeat (i.e., every six seconds).
 void T2_HeartBeat() {
-	// ShoutClosestEnemyLocation(OBJECT_SELF);
 	if (GetIsInCombat()) return;
-	DoHealing();
+	ActionDoCommand(DoHealing());
 	SetNewTargetIfNeeded("smart");
 	GoToMyTarget();
 	HandleTelemetry();

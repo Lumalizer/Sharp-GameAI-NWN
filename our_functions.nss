@@ -83,11 +83,16 @@ string GetNotSoRandomTarget() {
 	return "";
 }
 
-void DoHealing() {
-	if (TalentHealingSelf()) {
-		SpeakString("I am healing myself.", TALKVOLUME_SHOUT);
-		return;
+void DoHealing(int combat = FALSE) {
+	int myHealth = GetHealth(OBJECT_SELF);
+
+	if ((combat && myHealth < 4) || (!combat && myHealth < 5)) {
+		if (TalentHealingSelf()) {
+			SpeakString("I am healing myself.", TALKVOLUME_SHOUT);
+			return;
+		}
 	}
+
 	if (TalentHeal()) {
 		SpeakString("I am healing.", TALKVOLUME_SHOUT);
 		return;
@@ -418,7 +423,44 @@ int SetNewTargetIfNeeded(string method = "random") {
 	SetLocalString(OBJECT_SELF, "oldtarget", pTarget);
 	SetLocalString(OBJECT_SELF, "TARGET", sTarget);
 
+	ClearAllActions(FALSE);
+
 	return TRUE;
+}
+
+object GetClosestEnemy() {
+	object oEnemy =
+		GetNearestCreature(CREATURE_TYPE_REPUTATION, REPUTATION_TYPE_ENEMY, OBJECT_SELF);
+	return oEnemy;
+}
+
+int IsEquippedWeaponMelee(object oCharacter) {
+	object oWeapon = GetItemInSlot(INVENTORY_SLOT_RIGHTHAND, oCharacter);
+	int iWeaponType = GetBaseItemType(oWeapon);
+
+	if (iWeaponType == BASE_ITEM_LONGSWORD || iWeaponType == BASE_ITEM_SHORTSWORD ||
+		iWeaponType == BASE_ITEM_DAGGER || iWeaponType == BASE_ITEM_MORNINGSTAR ||
+		iWeaponType == BASE_ITEM_GREATSWORD || iWeaponType == BASE_ITEM_HALBERD ||
+		iWeaponType == BASE_ITEM_SCIMITAR || iWeaponType == BASE_ITEM_BATTLEAXE ||
+		iWeaponType == BASE_ITEM_HANDAXE || iWeaponType == BASE_ITEM_KAMA ||
+		iWeaponType == BASE_ITEM_KUKRI || iWeaponType == BASE_ITEM_RAPIER ||
+		iWeaponType == BASE_ITEM_SCYTHE || iWeaponType == BASE_ITEM_KATANA ||
+		iWeaponType == BASE_ITEM_BASTARDSWORD || iWeaponType == BASE_ITEM_DIREMACE ||
+		iWeaponType == BASE_ITEM_DOUBLEAXE || iWeaponType == BASE_ITEM_TWOBLADEDSWORD) {
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
+void EquipCorrectWeapon() {
+	object closestEnemy = GetClosestEnemy();
+	float fToEnemy = GetDistanceToObject(closestEnemy);
+
+	if (fToEnemy < 3.0 && !IsEquippedWeaponMelee(OBJECT_SELF) && !IsWizard(OBJECT_SELF)) {
+		SpeakString("I am switching to melee.", TALKVOLUME_SHOUT);
+		ActionEquipMostDamagingMelee();
+	}
 }
 
 int GoToMyTarget() {
