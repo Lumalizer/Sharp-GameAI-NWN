@@ -5,6 +5,7 @@
 // Called every time that the AI needs to take a combat decision. The default is
 // a call to the NWN DetermineCombatRound.
 void T2_DetermineCombatRound(object oIntruder = OBJECT_INVALID, int nAI_Difficulty = 10) {
+	EquipCorrectWeapon();
 	DoHealing(TRUE);
 	ActionDoCommand(DetermineCombatRound(oIntruder, nAI_Difficulty));
 	GoToMyTarget();

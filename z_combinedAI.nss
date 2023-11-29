@@ -1,7 +1,7 @@
 #include "NW_I0_GENERIC"
 #include "our_constants"
 
-float GetCreatureThreatLevel(object oCreature) {
+float T2_GetCreatureThreatLevel(object oCreature) {
 	int isFriendly = SameTeam(oCreature, OBJECT_SELF);
 	int inCombat = GetIsInCombat(oCreature);
 	int isMaster = IsMaster(oCreature);
@@ -19,7 +19,7 @@ float GetCreatureThreatLevel(object oCreature) {
 	return fThreat;
 }
 
-float GetLocationThreatLevel(string loc) {
+float T2_GetLocationThreatLevel(string loc) {
 	object oLocation = GetObjectByTag(loc);
 	float fThreatLevel = 0.0;
 
@@ -29,7 +29,7 @@ float GetLocationThreatLevel(string loc) {
 	while (GetIsObjectValid(oCreature)) {
 		float fDistance = GetDistanceBetween(oCreature, oLocation);
 		if (fDistance > 30.0) break;
-		fThreatLevel += GetCreatureThreatLevel(oCreature);
+		fThreatLevel += T2_GetCreatureThreatLevel(oCreature);
 		++i;
 		if (i > 12) break;
 		oCreature = GetNearestObjectToLocation(OBJECT_TYPE_CREATURE, GetLocation(oLocation), i);
@@ -38,7 +38,7 @@ float GetLocationThreatLevel(string loc) {
 	return fThreatLevel;
 }
 
-string GetNotSoRandomTarget() {
+string T2_GetNotSoRandomTarget() {
 	if (IsWizardLeft(OBJECT_SELF))
 		return WpClosestAltarLeft();
 	else if (IsWizardRight(OBJECT_SELF))
@@ -67,26 +67,26 @@ string GetNotSoRandomTarget() {
 	return "";
 }
 
-void DoHealing(int combat = FALSE) {
+void T2_DoHealing(int combat = FALSE) {
 	int myHealth = GetHealth(OBJECT_SELF);
 
 	if ((combat && myHealth < 4) || (!combat && myHealth < 5)) {
 		if (TalentHealingSelf()) {
-			SpeakString("I am healing myself.", TALKVOLUME_SHOUT);
+			// SpeakString("I am healing myself.", TALKVOLUME_SHOUT);
 			return;
 		}
 	}
 
 	if (TalentHeal()) {
-		SpeakString("I am healing.", TALKVOLUME_SHOUT);
+		// SpeakString("I am healing.", TALKVOLUME_SHOUT);
 		return;
 	}
 }
 
-string GetSmartAltar() {
+string T2_GetSmartAltar() {
 	string sMyColor = MyColor();
 	string sOpponentColor = OpponentColor();
-	float ourThreat = GetCreatureThreatLevel(OBJECT_SELF);
+	float ourThreat = T2_GetCreatureThreatLevel(OBJECT_SELF);
 
 	int isMaster = IsMaster();
 	int isFighter = IsFighter();
@@ -111,11 +111,11 @@ string GetSmartAltar() {
 	float distanceF_AR = GetDistanceBetween(OBJECT_SELF, GetObjectByTag(f_AR));
 	float distanceD = GetDistanceBetween(OBJECT_SELF, GetObjectByTag(d));
 
-	float fThreat_c_AL = GetLocationThreatLevel(c_AL);
-	float fThreat_c_AR = GetLocationThreatLevel(c_AR);
-	float fThreat_f_AL = GetLocationThreatLevel(f_AL);
-	float fThreat_f_AR = GetLocationThreatLevel(f_AR);
-	float fThreat_d = GetLocationThreatLevel(d);
+	float fThreat_c_AL = T2_GetLocationThreatLevel(c_AL);
+	float fThreat_c_AR = T2_GetLocationThreatLevel(c_AR);
+	float fThreat_f_AL = T2_GetLocationThreatLevel(f_AL);
+	float fThreat_f_AR = T2_GetLocationThreatLevel(f_AR);
+	float fThreat_d = T2_GetLocationThreatLevel(d);
 
 	string target = "";
 	string targetReason = "";
@@ -228,11 +228,11 @@ string GetSmartAltar() {
 
 	// random target if all else fails
 	if (target == "") {
-		target = GetNotSoRandomTarget();
+		target = T2_GetNotSoRandomTarget();
 		targetReason = "(random Target) ";
 	}
 
-	float locationThreat = GetLocationThreatLevel(target);
+	float locationThreat = T2_GetLocationThreatLevel(target);
 	float locationDistance = GetDistanceBetween(OBJECT_SELF, GetObjectByTag(target));
 	string sMessage = target + ": " + targetReason +
 					  " Threat score:" + FloatToString(locationThreat) +
@@ -243,7 +243,7 @@ string GetSmartAltar() {
 	return target;
 }
 
-int DetermineNeedNewTarget() {
+int T2_DetermineNeedNewTarget() {
 	string sTarget = GetLocalString(OBJECT_SELF, "TARGET");
 	if (sTarget == "") {
 		SetLocalString(OBJECT_SELF, "targetchangereason", "(no target)");
@@ -264,14 +264,14 @@ int DetermineNeedNewTarget() {
 	if (oCreature == OBJECT_SELF) return FALSE;
 
 	// if enemy strength is too high, then choose a new target
-	if (GetLocationThreatLevel(sTarget) > 2.5) {
+	if (T2_GetLocationThreatLevel(sTarget) > 2.5) {
 		SetLocalString(OBJECT_SELF, "targetchangereason", "(high enemy strength)");
 		// SpeakString("Changing target (high enemy strength): " + sTarget, TALKVOLUME_SHOUT);
 		return TRUE;
 	};
 
 	// if our strength is too high, then choose a new target
-	if (GetLocationThreatLevel(sTarget) < -2.5) {
+	if (T2_GetLocationThreatLevel(sTarget) < -2.5) {
 		SetLocalString(OBJECT_SELF, "targetchangereason", "(high allied strength)");
 		// SpeakString("Changing target (high enemy strength): " + sTarget, TALKVOLUME_SHOUT);
 		return TRUE;
@@ -299,20 +299,20 @@ int DetermineNeedNewTarget() {
 }
 
 // sets a new target, if needed, and returns the distance to the target
-int SetNewTargetIfNeeded(string method = "random") {
-	if (!DetermineNeedNewTarget()) return FALSE;
+int T2_SetNewTargetIfNeeded(string method = "random") {
+	if (!T2_DetermineNeedNewTarget()) return FALSE;
 
 	string sTarget = "";
 
 	if (method == "random")
-		sTarget = GetNotSoRandomTarget();
+		sTarget = T2_GetNotSoRandomTarget();
 	else if (method == "smart")
-		sTarget = GetSmartAltar();
+		sTarget = T2_GetSmartAltar();
 
 	if (method != "smart") {
-		float locationThreat = GetLocationThreatLevel(sTarget);
+		float locationThreat = T2_GetLocationThreatLevel(sTarget);
 		string sMessage = "Going to: " + sTarget + " Threat score:" + FloatToString(locationThreat);
-		SpeakString(sMessage, TALKVOLUME_SHOUT);
+		// SpeakString(sMessage, TALKVOLUME_SHOUT);
 	}
 
 	// check if the new target is the same as the old target
@@ -327,13 +327,13 @@ int SetNewTargetIfNeeded(string method = "random") {
 	return TRUE;
 }
 
-object GetClosestEnemy() {
+object T2_GetClosestEnemy() {
 	object oEnemy =
 		GetNearestCreature(CREATURE_TYPE_REPUTATION, REPUTATION_TYPE_ENEMY, OBJECT_SELF);
 	return oEnemy;
 }
 
-int IsEquippedWeaponMelee(object oCharacter) {
+int T2_IsEquippedWeaponMelee(object oCharacter) {
 	object oWeapon = GetItemInSlot(INVENTORY_SLOT_RIGHTHAND, oCharacter);
 	int iWeaponType = GetBaseItemType(oWeapon);
 
@@ -353,20 +353,20 @@ int IsEquippedWeaponMelee(object oCharacter) {
 	return FALSE;
 }
 
-void EquipCorrectWeapon() {
-	object closestEnemy = GetClosestEnemy();
+void T2_EquipCorrectWeapon() {
+	object closestEnemy = T2_GetClosestEnemy();
 	float fToEnemy = GetDistanceToObject(closestEnemy);
 
-	if (fToEnemy < 3.0 && !IsEquippedWeaponMelee(OBJECT_SELF) && !IsWizard(OBJECT_SELF) &&
+	if (fToEnemy < 3.0 && !T2_IsEquippedWeaponMelee(OBJECT_SELF) && !IsWizard(OBJECT_SELF) &&
 		!IsCleric(OBJECT_SELF)) {
-		SpeakString("I am switching to melee.", TALKVOLUME_SHOUT);
+		// SpeakString("I am switching to melee.", TALKVOLUME_SHOUT);
 		ActionEquipMostDamagingMelee();
 	}
 }
 
-int GoToMyTarget() {
+int T2_GoToMyTarget() {
 	// if an enemy is close
-	object closestEnemy = GetClosestEnemy();
+	object closestEnemy = T2_GetClosestEnemy();
 	float fToEnemy = GetDistanceToObject(closestEnemy);
 
 	if (fToEnemy < 8.0) {
@@ -381,9 +381,9 @@ int GoToMyTarget() {
 	// if (sTarget == "") return FALSE;
 	object oTarget = GetObjectByTag(sTarget);
 
-	if (IsEquippedWeaponMelee(OBJECT_SELF) && !IsWizard(OBJECT_SELF)) {
+	if (T2_IsEquippedWeaponMelee(OBJECT_SELF) && !IsWizard(OBJECT_SELF)) {
 		if (fToEnemy < 6.0 && fToEnemy > 2.0) {
-			SpeakString("I am melee closing in." + FloatToString(fToEnemy), TALKVOLUME_SHOUT);
+			// SpeakString("I am melee closing in." + FloatToString(fToEnemy), TALKVOLUME_SHOUT);
 			oTarget = closestEnemy;
 		}
 	}
@@ -394,7 +394,7 @@ int GoToMyTarget() {
 	return fToTarget > 0.0;
 }
 
-void HandleTelemetry(int enabled = TRUE) {
+void T2_HandleTelemetry(int enabled = TRUE) {
 	if (!enabled) return;
 	string targetchoiceinfo = GetLocalString(OBJECT_SELF, "targetchoiceinfo");
 	string targetchangereason = GetLocalString(OBJECT_SELF, "targetchangereason");
@@ -403,7 +403,81 @@ void HandleTelemetry(int enabled = TRUE) {
 	if (targetchangereason != "") {
 		string sMessage = "Target Changed from: " + oldtarget + " " + targetchangereason +
 						  " To: " + targetchoiceinfo;
-		SpeakString(sMessage, TALKVOLUME_SHOUT);
+		// SpeakString(sMessage, TALKVOLUME_SHOUT);
 		SetLocalString(OBJECT_SELF, "targetchangereason", "");
 	}
 }
+
+// Called every time that the AI needs to take a combat decision. The default is
+// a call to the NWN DetermineCombatRound.
+void T2_DetermineCombatRound(object oIntruder = OBJECT_INVALID, int nAI_Difficulty = 10) {
+	T2_EquipCorrectWeapon();
+	T2_DoHealing(TRUE);
+	ActionDoCommand(DetermineCombatRound(oIntruder, nAI_Difficulty));
+	T2_GoToMyTarget();
+}
+
+// Called every heartbeat (i.e., every six seconds).
+void T2_HeartBeat() {
+	if (GetIsInCombat()) return;
+	T2_DoHealing();
+	T2_SetNewTargetIfNeeded("smart");
+	T2_GoToMyTarget();
+	T2_HandleTelemetry();
+}
+
+// Called when the NPC is spawned.
+void T2_Spawn() {
+	T2_SetNewTargetIfNeeded("smart");
+	T2_GoToMyTarget();
+	T2_HandleTelemetry();
+}
+
+// This function is called when certain events take place, after the standard
+// NWN handling of these events has been performed.
+void T2_UserDefined(int Event) {
+	switch (Event) {
+		// The NPC has just been attacked.
+		case EVENT_ATTACKED:
+			break;
+
+		// The NPC was damaged.
+		case EVENT_DAMAGED:
+			break;
+
+		// At the end of one round of combat.
+		case EVENT_END_COMBAT_ROUND:
+			break;
+
+		// Every heartbeat (i.e., every six seconds).
+		case EVENT_HEARTBEAT:
+			T2_HeartBeat();
+			break;
+
+		// Whenever the NPC perceives a new creature.
+		case EVENT_PERCEIVE:
+			break;
+
+		// When a spell is cast at the NPC.
+		case EVENT_SPELL_CAST_AT:
+			break;
+
+		// Whenever the NPC's inventory is disturbed.
+		case EVENT_DISTURBED:
+			break;
+
+		// Whenever the NPC dies.
+		case EVENT_DEATH:
+			break;
+
+		// When the NPC has just been spawned.
+		case EVENT_SPAWN:
+			T2_Spawn();
+			break;
+	}
+
+	return;
+}
+
+// Called when the fight starts, just before the initial spawning.
+void T2_Initialize(string sColor) { SetTeamName(sColor, "Team-" + GetStringLowerCase(sColor)); }
