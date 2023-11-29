@@ -1,18 +1,6 @@
 #include "NW_I0_GENERIC"
 #include "our_constants"
 
-void ShoutClosestEnemyLocation(object oPC) {
-	object oClosestEnemy = GetNearestObject(OBJECT_TYPE_CREATURE, oPC, 1);
-
-	if (GetIsObjectValid(oClosestEnemy) && GetIsEnemy(oPC, oClosestEnemy)) {
-		string sEnemyName = GetName(oClosestEnemy);
-		string sMessage = "The closest enemy is: " + sEnemyName;
-		SpeakString(sMessage, TALKVOLUME_SHOUT);
-	} else {
-		// SpeakString("No enemies nearby.", TALKVOLUME_SHOUT);
-	}
-}
-
 float GetCreatureThreatLevel(object oCreature) {
 	int isFriendly = SameTeam(oCreature, OBJECT_SELF);
 	int inCombat = GetIsInCombat(oCreature);
@@ -51,10 +39,6 @@ float GetLocationThreatLevel(string loc) {
 }
 
 string GetNotSoRandomTarget() {
-	// The next line moves to the spawn location of the similar opponent
-	// ActionMoveToLocation( GetLocation( GetObjectByTag( "WP_" + OpponentColor( OBJECT_SELF ) + "_"
-	// + IntToString( GetLocalInt( OBJECT_SELF, "INDEX" ) ) ) ), TRUE );
-
 	if (IsWizardLeft(OBJECT_SELF))
 		return WpClosestAltarLeft();
 	else if (IsWizardRight(OBJECT_SELF))
@@ -100,14 +84,14 @@ void DoHealing(int combat = FALSE) {
 }
 
 string GetSmartAltar() {
-	string sMyColor = MyColor(OBJECT_SELF);
-	string sOpponentColor = OpponentColor(OBJECT_SELF);
+	string sMyColor = MyColor();
+	string sOpponentColor = OpponentColor();
 	float ourThreat = GetCreatureThreatLevel(OBJECT_SELF);
 
-	int isMaster = IsMaster(OBJECT_SELF);
-	int isFighter = IsFighter(OBJECT_SELF);
-	int isCleric = IsCleric(OBJECT_SELF);
-	int isWizard = IsWizard(OBJECT_SELF);
+	int isMaster = IsMaster();
+	int isFighter = IsFighter();
+	int isCleric = IsCleric();
+	int isWizard = IsWizard();
 
 	string c_AL = WpClosestAltarLeft();
 	string c_AR = WpClosestAltarRight();
@@ -166,6 +150,12 @@ string GetSmartAltar() {
 			target = f_AR;
 
 		if (target != "") targetReason = "(unclaimed close target)";
+	}
+
+	// send cleric/fighter to doubler if needed
+	if (IsClericLeft() || IsFighterRight()) {
+		if (claimerD != sMyColor && fThreat_d < 3.0) target = d;
+		if (target != "") targetReason = "(cleric/fighter to doubler)";
 	}
 
 	// threat level based decisions
@@ -236,45 +226,6 @@ string GetSmartAltar() {
 		if (target != "") targetReason = "(unclaimed target)";
 	}
 
-	// // Use distance as a factor in finding the best altar
-	// if (target == "") {
-	// 	string bestAltar = "";
-	// 	float bestScore = 100000.0;	 // Initialize with a very high score for comparison
-
-	// 	// Calculate a score for each altar where lower is better
-	// 	// Score is calculated as a weighted combination of threat and distance
-	// 	// Adjust the weight according to the gameplay needs (e.g., 10.0 is the threat weight)
-	// 	float scoreC_AL = fThreat_c_AL * 4.0 + distanceC_AL;
-	// 	float scoreC_AR = fThreat_c_AR * 4.0 + distanceC_AR;
-	// 	float scoreF_AL = fThreat_f_AL * 4.0 + distanceF_AL;
-	// 	float scoreF_AR = fThreat_f_AR * 4.0 + distanceF_AR;
-
-	// 	if (scoreC_AL < bestScore) {
-	// 		bestAltar = c_AL;
-	// 		bestScore = scoreC_AL;
-	// 	}
-
-	// 	if (scoreC_AR < bestScore) {
-	// 		bestAltar = c_AR;
-	// 		bestScore = scoreC_AR;
-	// 	}
-
-	// 	if (scoreF_AL < bestScore) {
-	// 		bestAltar = f_AL;
-	// 		bestScore = scoreF_AL;
-	// 	}
-
-	// 	if (scoreF_AR < bestScore) {
-	// 		bestAltar = f_AR;
-	// 		bestScore = scoreF_AR;
-	// 	}
-
-	// 	if (bestAltar != "") {
-	// 		target = bestAltar;
-	// 		targetReason = "(threat and distance score best)";
-	// 	}
-	// }
-
 	// random target if all else fails
 	if (target == "") {
 		target = GetNotSoRandomTarget();
@@ -292,60 +243,6 @@ string GetSmartAltar() {
 	return target;
 }
 
-string GetTargetAltar(string condition) {
-	string c_AL = WpClosestAltarLeft();
-	string c_AR = WpClosestAltarRight();
-	string f_AL = WpFurthestAltarLeft();
-	string f_AR = WpFurthestAltarRight();
-
-	if (ClaimerOf(c_AL) == condition)
-		return c_AL;
-	else if (ClaimerOf(c_AR) == condition)
-		return c_AR;
-	else if (ClaimerOf(f_AL) == condition)
-		return f_AL;
-	else if (ClaimerOf(f_AR) == condition)
-		return f_AR;
-	else
-		return "";
-}
-
-string ChooseStrategicAltar() {
-	string sMyColor = MyColor(OBJECT_SELF);
-	string sOpponentColor = OpponentColor(OBJECT_SELF);
-
-	string emptyAltar = GetTargetAltar("");
-	if (emptyAltar != "") return emptyAltar;
-
-	string defAltar = GetTargetAltar(sMyColor);
-	string attackAltar = GetTargetAltar(sOpponentColor);
-	string targetAltar = "";
-	string mode = "";
-
-	if (defAltar != "") {
-		targetAltar = defAltar;
-		mode = "defend";
-	} else if (attackAltar != "") {
-		targetAltar = attackAltar;
-		mode = "attack";
-	} else
-		return GetNotSoRandomTarget();
-
-	object oAltar = GetObjectByTag(targetAltar);
-	object oEnemy = GetNearestCreature(1, 1, oAltar, 1, -1, 2, 1);
-
-	if (mode == "defend") {
-		// Assuming 5.0 is a reasonable distance to detect threats
-		if (GetIsObjectValid(oEnemy) && GetDistanceBetween(oAltar, oEnemy) <= 5.0)
-			return targetAltar;
-	} else if (mode == "attack") {
-		// Assuming 5.0 is a reasonable distance to detect defenders
-		if (!GetIsObjectValid(oEnemy) || GetDistanceBetween(oAltar, oEnemy) > 5.0)
-			return targetAltar;
-	}
-	return GetNotSoRandomTarget();
-}
-
 int DetermineNeedNewTarget() {
 	string sTarget = GetLocalString(OBJECT_SELF, "TARGET");
 	if (sTarget == "") {
@@ -358,20 +255,24 @@ int DetermineNeedNewTarget() {
 	float fToTarget = GetDistanceToObject(oTarget);
 	int underOurControl = ClaimerOf(sTarget) == MyColor(OBJECT_SELF);
 
+	if (IsMaster() && underOurControl) {
+		SetLocalString(OBJECT_SELF, "targetchangereason", "(master should move on)");
+		return TRUE;
+	}
+
 	// if I am the closest to the target, then do not choose a new target
 	if (oCreature == OBJECT_SELF) return FALSE;
-
-	// // if target threat is low, then choose a new target
-	// if (!GetIsInCombat(oCreature) && GetLocationThreatLevel(sTarget, OBJECT_SELF) < -2.0) {
-	// 	if (Random(2) == 0) {
-	// 		SpeakString("Changing target (high allied strength): " + sTarget, TALKVOLUME_SHOUT);
-	// 		return TRUE;
-	// 	}
-	// };
 
 	// if enemy strength is too high, then choose a new target
 	if (GetLocationThreatLevel(sTarget) > 2.5) {
 		SetLocalString(OBJECT_SELF, "targetchangereason", "(high enemy strength)");
+		// SpeakString("Changing target (high enemy strength): " + sTarget, TALKVOLUME_SHOUT);
+		return TRUE;
+	};
+
+	// if our strength is too high, then choose a new target
+	if (GetLocationThreatLevel(sTarget) < -2.5) {
+		SetLocalString(OBJECT_SELF, "targetchangereason", "(high allied strength)");
 		// SpeakString("Changing target (high enemy strength): " + sTarget, TALKVOLUME_SHOUT);
 		return TRUE;
 	};
@@ -386,7 +287,7 @@ int DetermineNeedNewTarget() {
 		if (GetDistanceBetween(oCreature, oTarget) > 5.0) break;
 		if (!SameTeam(oCreature)) break;
 		if (GetIsInCombat(oCreature)) break;
-		if (GetLocalString(oCreature, "TARGET") == sTarget) {
+		if (GetLocalString(oCreature, "TARGET") == sTarget && !IsMaster(oCreature)) {
 			SetLocalString(OBJECT_SELF, "targetchangereason", "(friendly has control)");
 			return TRUE;
 			break;
@@ -405,8 +306,6 @@ int SetNewTargetIfNeeded(string method = "random") {
 
 	if (method == "random")
 		sTarget = GetNotSoRandomTarget();
-	else if (method == "strategic")
-		sTarget = ChooseStrategicAltar();
 	else if (method == "smart")
 		sTarget = GetSmartAltar();
 
@@ -438,6 +337,7 @@ int IsEquippedWeaponMelee(object oCharacter) {
 	object oWeapon = GetItemInSlot(INVENTORY_SLOT_RIGHTHAND, oCharacter);
 	int iWeaponType = GetBaseItemType(oWeapon);
 
+	// Check if the weapon type is melee
 	if (iWeaponType == BASE_ITEM_LONGSWORD || iWeaponType == BASE_ITEM_SHORTSWORD ||
 		iWeaponType == BASE_ITEM_DAGGER || iWeaponType == BASE_ITEM_MORNINGSTAR ||
 		iWeaponType == BASE_ITEM_GREATSWORD || iWeaponType == BASE_ITEM_HALBERD ||
@@ -464,9 +364,29 @@ void EquipCorrectWeapon() {
 }
 
 int GoToMyTarget() {
+	// if an enemy is close
+	object closestEnemy = GetClosestEnemy();
+	float fToEnemy = GetDistanceToObject(closestEnemy);
+
+	if (fToEnemy < 8.0) {
+		// attack enemy directly
+		ClearAllActions(TRUE);
+		// SetLocalString(OBJECT_SELF, "TARGET", "");
+		ActionAttack(closestEnemy);
+		// return TRUE;
+	}
+
 	string sTarget = GetLocalString(OBJECT_SELF, "TARGET");
-	if (sTarget == "") return FALSE;
+	// if (sTarget == "") return FALSE;
 	object oTarget = GetObjectByTag(sTarget);
+
+	if (IsEquippedWeaponMelee(OBJECT_SELF) && !IsWizard(OBJECT_SELF)) {
+		if (fToEnemy < 6.0 && fToEnemy > 2.0) {
+			SpeakString("I am melee closing in." + FloatToString(fToEnemy), TALKVOLUME_SHOUT);
+			oTarget = closestEnemy;
+		}
+	}
+
 	if (!GetIsObjectValid(oTarget)) return FALSE;
 	float fToTarget = GetDistanceToObject(oTarget);
 	if (fToTarget > 0.5) ActionMoveToLocation(GetLocation(oTarget), TRUE);
