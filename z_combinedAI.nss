@@ -1,6 +1,16 @@
 #include "NW_I0_GENERIC"
 #include "our_constants"
 
+object T2_GetClosestEnemy(object from = OBJECT_SELF) {
+	object oEnemy = GetNearestCreature(CREATURE_TYPE_REPUTATION, REPUTATION_TYPE_ENEMY, from);
+	return oEnemy;
+}
+
+object T2_GetClosestFriendly(object from = OBJECT_SELF) {
+	object oFriendly = GetNearestCreature(CREATURE_TYPE_REPUTATION, REPUTATION_TYPE_FRIEND, from);
+	return oFriendly;
+}
+
 float T2_GetCreatureThreatLevel(object oCreature) {
 	int isFriendly = SameTeam(oCreature, OBJECT_SELF);
 	int inCombat = GetIsInCombat(oCreature);
@@ -28,7 +38,7 @@ float T2_GetLocationThreatLevel(string loc) {
 	object oCreature = GetNearestObjectToLocation(OBJECT_TYPE_CREATURE, GetLocation(oLocation), i);
 	while (GetIsObjectValid(oCreature)) {
 		float fDistance = GetDistanceBetween(oCreature, oLocation);
-		if (fDistance > 30.0) break;
+		if (fDistance > 27.0) break;
 		fThreatLevel += T2_GetCreatureThreatLevel(oCreature);
 		++i;
 		if (i > 12) break;
@@ -122,12 +132,17 @@ string T2_GetSmartAltar() {
 
 	// class-specific behavior
 	if (isWizard) {
-		if (distanceC_AL < distanceC_AR && claimerC_AL != sMyColor)
-			target = c_AL;
-		else if (claimerC_AR != sMyColor)
-			target = c_AR;
-		else if (claimerC_AL != sMyColor)
-			target = c_AL;
+		if (distanceC_AL < distanceC_AR) {
+			if (claimerC_AL != sMyColor)
+				target = c_AL;
+			else if (claimerC_AR != sMyColor)
+				target = c_AR;
+		} else {
+			if (claimerC_AR != sMyColor)
+				target = c_AR;
+			else if (claimerC_AL != sMyColor)
+				target = c_AL;
+		}
 
 		if (target != "") targetReason = "(wizard target)";
 
@@ -137,19 +152,26 @@ string T2_GetSmartAltar() {
 	}
 
 	// control close unclaimed altars
-	if (target == "") {
-		if (claimerD == "" && distanceD < 20.0)
-			target = d;
-		else if (claimerC_AL == "" && distanceC_AL < 20.0)
-			target = c_AL;
-		else if (claimerC_AR == "" && distanceC_AR < 20.0)
-			target = c_AR;
-		else if (claimerF_AL == "" && distanceF_AL < 20.0)
-			target = f_AL;
-		else if (claimerF_AR == "" && distanceF_AR < 20.0)
-			target = f_AR;
+	if (!isMaster) {
+		if (target == "") {
+			if (claimerD == "" && distanceD < 20.0 &&
+				T2_GetClosestFriendly(GetObjectByTag(d)) == OBJECT_SELF)
+				target = d;
+			else if (claimerC_AL == "" && distanceC_AL < 20.0 &&
+					 T2_GetClosestFriendly(GetObjectByTag(c_AL)) == OBJECT_SELF)
+				target = c_AL;
+			else if (claimerC_AR == "" && distanceC_AR < 20.0 &&
+					 T2_GetClosestFriendly(GetObjectByTag(c_AR)) == OBJECT_SELF)
+				target = c_AR;
+			else if (claimerF_AL == "" && distanceF_AL < 20.0 &&
+					 T2_GetClosestFriendly(GetObjectByTag(f_AL)) == OBJECT_SELF)
+				target = f_AL;
+			else if (claimerF_AR == "" && distanceF_AR < 20.0 &&
+					 T2_GetClosestFriendly(GetObjectByTag(f_AR)) == OBJECT_SELF)
+				target = f_AR;
 
-		if (target != "") targetReason = "(unclaimed close target)";
+			if (target != "") targetReason = "(unclaimed close target)";
+		}
 	}
 
 	// send cleric/fighter to doubler if needed
@@ -158,34 +180,40 @@ string T2_GetSmartAltar() {
 		if (target != "") targetReason = "(cleric/fighter to doubler)";
 	}
 
-	// threat level based decisions
+	// threat + distance based decisions
 	if (target == "") {
-		int threat_decision_d = (fThreat_d >= 0.0 && fThreat_d + ourThreat < 1.3);
-		int threat_decision_c_AL = (fThreat_c_AL > 0.0 && fThreat_c_AL + ourThreat < 0.4);
-		int threat_decision_c_AR = (fThreat_c_AR > 0.0 && fThreat_c_AR + ourThreat < 0.4);
-		int threat_decision_f_AL = (fThreat_f_AL > 0.0 && fThreat_f_AL + ourThreat < 0.3);
-		int threat_decision_f_AR = (fThreat_f_AR > 0.0 && fThreat_f_AR + ourThreat < 0.3);
+		float threat_decision_d = (fThreat_d >= 0.0 && fThreat_d + ourThreat < 1.3) / distanceD;
+		float threat_decision_c_AL =
+			(fThreat_c_AL > 0.0 && fThreat_c_AL + ourThreat < 0.4) / distanceC_AL;
+		float threat_decision_c_AR =
+			(fThreat_c_AR > 0.0 && fThreat_c_AR + ourThreat < 0.4) / distanceC_AR;
+		float threat_decision_f_AL =
+			(fThreat_f_AL > 0.0 && fThreat_f_AL + ourThreat < 0.3) / distanceF_AL;
+		float threat_decision_f_AR =
+			(fThreat_f_AR > 0.0 && fThreat_f_AR + ourThreat < 0.3) / distanceF_AR;
 
-		if (threat_decision_d)
+		float highest = 0.0;
+
+		if (threat_decision_d > highest) {
+			highest = threat_decision_d;
 			target = d;
-		else if (threat_decision_c_AL && threat_decision_c_AR) {
-			if (distanceC_AL < distanceC_AR)
-				target = c_AL;
-			else
-				target = c_AR;
-		} else if (threat_decision_c_AL)
+		}
+		if (threat_decision_c_AL > highest) {
+			highest = threat_decision_c_AL;
 			target = c_AL;
-		else if (threat_decision_c_AR)
+		}
+		if (threat_decision_c_AR > highest) {
+			highest = threat_decision_c_AR;
 			target = c_AR;
-		else if (threat_decision_f_AL && threat_decision_f_AR) {
-			if (distanceF_AL < distanceF_AR)
-				target = f_AL;
-			else
-				target = f_AR;
-		} else if (threat_decision_f_AL)
+		}
+		if (threat_decision_f_AL > highest) {
+			highest = threat_decision_f_AL;
 			target = f_AL;
-		else if (threat_decision_f_AR)
+		}
+		if (threat_decision_f_AR > highest) {
+			highest = threat_decision_f_AR;
 			target = f_AR;
+		}
 
 		if (target != "") targetReason = "(threat target)";
 	}
@@ -255,7 +283,7 @@ int T2_DetermineNeedNewTarget() {
 	float fToTarget = GetDistanceToObject(oTarget);
 	int underOurControl = ClaimerOf(sTarget) == MyColor(OBJECT_SELF);
 
-	if (IsMaster() && underOurControl) {
+	if (IsMaster() && underOurControl == TRUE) {
 		SetLocalString(OBJECT_SELF, "targetchangereason", "(master should move on)");
 		return TRUE;
 	}
@@ -327,25 +355,12 @@ int T2_SetNewTargetIfNeeded(string method = "random") {
 	return TRUE;
 }
 
-object T2_GetClosestEnemy() {
-	object oEnemy =
-		GetNearestCreature(CREATURE_TYPE_REPUTATION, REPUTATION_TYPE_ENEMY, OBJECT_SELF);
-	return oEnemy;
-}
-
 int T2_IsEquippedWeaponMelee(object oCharacter) {
 	object oWeapon = GetItemInSlot(INVENTORY_SLOT_RIGHTHAND, oCharacter);
 	int iWeaponType = GetBaseItemType(oWeapon);
 
 	// Check if the weapon type is melee
-	if (iWeaponType == BASE_ITEM_LONGSWORD || iWeaponType == BASE_ITEM_SHORTSWORD ||
-		iWeaponType == BASE_ITEM_DAGGER || iWeaponType == BASE_ITEM_MORNINGSTAR ||
-		iWeaponType == BASE_ITEM_GREATSWORD || iWeaponType == BASE_ITEM_HALBERD ||
-		iWeaponType == BASE_ITEM_SCIMITAR || iWeaponType == BASE_ITEM_BATTLEAXE ||
-		iWeaponType == BASE_ITEM_HANDAXE || iWeaponType == BASE_ITEM_KAMA ||
-		iWeaponType == BASE_ITEM_KUKRI || iWeaponType == BASE_ITEM_RAPIER ||
-		iWeaponType == BASE_ITEM_SCYTHE || iWeaponType == BASE_ITEM_KATANA ||
-		iWeaponType == BASE_ITEM_BASTARDSWORD || iWeaponType == BASE_ITEM_DIREMACE ||
+	if (iWeaponType == BASE_ITEM_GREATSWORD || iWeaponType == BASE_ITEM_GREATAXE ||
 		iWeaponType == BASE_ITEM_DOUBLEAXE || iWeaponType == BASE_ITEM_TWOBLADEDSWORD) {
 		return TRUE;
 	}
@@ -394,7 +409,7 @@ int T2_GoToMyTarget() {
 	return fToTarget > 0.0;
 }
 
-void T2_HandleTelemetry(int enabled = TRUE) {
+void T2_HandleTelemetry(int enabled = FALSE) {
 	if (!enabled) return;
 	string targetchoiceinfo = GetLocalString(OBJECT_SELF, "targetchoiceinfo");
 	string targetchangereason = GetLocalString(OBJECT_SELF, "targetchangereason");
@@ -403,7 +418,7 @@ void T2_HandleTelemetry(int enabled = TRUE) {
 	if (targetchangereason != "") {
 		string sMessage = "Target Changed from: " + oldtarget + " " + targetchangereason +
 						  " To: " + targetchoiceinfo;
-		// SpeakString(sMessage, TALKVOLUME_SHOUT);
+		SpeakString(sMessage, TALKVOLUME_SHOUT);
 		SetLocalString(OBJECT_SELF, "targetchangereason", "");
 	}
 }

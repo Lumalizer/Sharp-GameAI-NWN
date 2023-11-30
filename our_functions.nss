@@ -1,6 +1,16 @@
 #include "NW_I0_GENERIC"
 #include "our_constants"
 
+object GetClosestEnemy(object from = OBJECT_SELF) {
+	object oEnemy = GetNearestCreature(CREATURE_TYPE_REPUTATION, REPUTATION_TYPE_ENEMY, from);
+	return oEnemy;
+}
+
+object GetClosestFriendly(object from = OBJECT_SELF) {
+	object oFriendly = GetNearestCreature(CREATURE_TYPE_REPUTATION, REPUTATION_TYPE_FRIEND, from);
+	return oFriendly;
+}
+
 float GetCreatureThreatLevel(object oCreature) {
 	int isFriendly = SameTeam(oCreature, OBJECT_SELF);
 	int inCombat = GetIsInCombat(oCreature);
@@ -28,7 +38,7 @@ float GetLocationThreatLevel(string loc) {
 	object oCreature = GetNearestObjectToLocation(OBJECT_TYPE_CREATURE, GetLocation(oLocation), i);
 	while (GetIsObjectValid(oCreature)) {
 		float fDistance = GetDistanceBetween(oCreature, oLocation);
-		if (fDistance > 30.0) break;
+		if (fDistance > 27.0) break;
 		fThreatLevel += GetCreatureThreatLevel(oCreature);
 		++i;
 		if (i > 12) break;
@@ -255,7 +265,7 @@ int DetermineNeedNewTarget() {
 	float fToTarget = GetDistanceToObject(oTarget);
 	int underOurControl = ClaimerOf(sTarget) == MyColor(OBJECT_SELF);
 
-	if (IsMaster() && underOurControl) {
+	if (IsMaster() && underOurControl == TRUE) {
 		SetLocalString(OBJECT_SELF, "targetchangereason", "(master should move on)");
 		return TRUE;
 	}
@@ -327,25 +337,12 @@ int SetNewTargetIfNeeded(string method = "random") {
 	return TRUE;
 }
 
-object GetClosestEnemy() {
-	object oEnemy =
-		GetNearestCreature(CREATURE_TYPE_REPUTATION, REPUTATION_TYPE_ENEMY, OBJECT_SELF);
-	return oEnemy;
-}
-
 int IsEquippedWeaponMelee(object oCharacter) {
 	object oWeapon = GetItemInSlot(INVENTORY_SLOT_RIGHTHAND, oCharacter);
 	int iWeaponType = GetBaseItemType(oWeapon);
 
 	// Check if the weapon type is melee
-	if (iWeaponType == BASE_ITEM_LONGSWORD || iWeaponType == BASE_ITEM_SHORTSWORD ||
-		iWeaponType == BASE_ITEM_DAGGER || iWeaponType == BASE_ITEM_MORNINGSTAR ||
-		iWeaponType == BASE_ITEM_GREATSWORD || iWeaponType == BASE_ITEM_HALBERD ||
-		iWeaponType == BASE_ITEM_SCIMITAR || iWeaponType == BASE_ITEM_BATTLEAXE ||
-		iWeaponType == BASE_ITEM_HANDAXE || iWeaponType == BASE_ITEM_KAMA ||
-		iWeaponType == BASE_ITEM_KUKRI || iWeaponType == BASE_ITEM_RAPIER ||
-		iWeaponType == BASE_ITEM_SCYTHE || iWeaponType == BASE_ITEM_KATANA ||
-		iWeaponType == BASE_ITEM_BASTARDSWORD || iWeaponType == BASE_ITEM_DIREMACE ||
+	if (iWeaponType == BASE_ITEM_GREATSWORD || iWeaponType == BASE_ITEM_GREATAXE ||
 		iWeaponType == BASE_ITEM_DOUBLEAXE || iWeaponType == BASE_ITEM_TWOBLADEDSWORD) {
 		return TRUE;
 	}
